@@ -44,7 +44,7 @@ jobs:
     - name: workaround for https://github.com/actions/virtual-environments/issues/2228
       run: echo cmake.dir=/usr > external/helio-workstation/Projects/Android/local.properties
     - name: build
-      run: make
+      run: make build dist
     - name: upload-artifact
       uses: actions/upload-artifact@v1
       with:
