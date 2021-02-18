@@ -42,7 +42,7 @@ jobs:
     - name: workaround for https://github.com/actions/virtual-environments/issues/2228
       run: echo "yes" | $ANDROID_HOME/tools/bin/sdkmanager "cmake;3.18.1" --channel=3
     - name: workaround for https://github.com/actions/virtual-environments/issues/2228
-      run: echo cmake.dir=/usr > external/helio-workstation/Projects/Android
+      run: echo cmake.dir=/usr > external/helio-workstation/Projects/Android/local.properties
     - name: build
       run: make
     - name: upload-artifact
@@ -77,7 +77,7 @@ jobs:
     - name: workaround for https://github.com/actions/virtual-environments/issues/2228
       run: echo "yes" | $ANDROID_HOME/tools/bin/sdkmanager "cmake;3.18.1" --channel=3
     - name: workaround for https://github.com/actions/virtual-environments/issues/2228
-      run: echo cmake.dir=/usr/local > external/helio-workstation/Projects/Android
+      run: echo cmake.dir=/usr/local > external/helio-workstation/Projects/Android/local.properties
     - name: build
       run: make MINIMIZE_INTERMEDIATES=1
       env:
