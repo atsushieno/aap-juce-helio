@@ -1,0 +1,84 @@
+name: build dist
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  linux-build:
+    name: build on linux
+    runs-on: ubuntu-20.04
+    steps:
+    - name: checkout
+      uses: actions/checkout@v1
+      with:
+        submodules: recursive
+    - name: apt update
+      run: |
+        sudo apt-get update
+    - name: set up JDK 11
+      uses: actions/setup-java@v1
+      with:
+        java-version: 11
+    - name: cache NDK
+      uses: actions/cache@v2
+      env:
+        cache-name: cache-ndk
+      with:
+        path: /usr/local/lib/android/sdk/ndk/21.3.6528147
+        key: ndk_r21c_linux
+    - name: apt install
+      run: |
+        echo y | sudo apt-get install xvfb wget unzip libc6 \
+                 libcurl3-gnutls-dev  libfreetype6-dev libgcc1 libjpeg-dev \
+                 libpng-dev libstdc++6 libwebkit2gtk-4.0-dev libx11-6 \
+                 libxext6 zlib1g  make g++ mesa-common-dev libasound2-dev \
+                 libjack-jackd2-dev ladspa-sdk \
+                 doxygen libgrpc++-dev libgrpc-dev \
+                 libprotobuf-dev protobuf-compiler protobuf-compiler-grpc \
+                 graphviz cmake ninja-build
+    - name: stupid NDK setup workaround for GitHub Actions
+      run: sudo mkdir -p /usr/local/lib/android/sdk/ndk && sudo chmod 777 /usr/local/lib/android/sdk/ndk
+    - name: workaround for https://github.com/actions/virtual-environments/issues/2228
+      run: echo "yes" | $ANDROID_HOME/tools/bin/sdkmanager "cmake;3.18.1" --channel=3
+    - name: workaround for https://github.com/actions/virtual-environments/issues/2228
+      run: echo cmake.dir=/usr > external/helio-workstation/Projects/Android
+    - name: build
+      run: make
+    - name: upload-artifact
+      uses: actions/upload-artifact@v1
+      with:
+        name: release-builds
+        path: release-builds
+
+  osx-build:
+    name: build on osx
+    runs-on: macos-10.15
+    if: false
+    steps:
+    - name: checkout
+      uses: actions/checkout@v1
+      with:
+        submodules: recursive
+    - name: set up JDK 11
+      uses: actions/setup-java@v1
+      with:
+        java-version: 11
+    - name: cache NDK
+      uses: actions/cache@v2
+      env:
+        cache-name: cache-ndk
+      with:
+        path: /Users/runner/Library/Android/sdk/ndk/21.3.6528147
+        key: ndk_r21c_osx
+    - name: install deps
+      run: |
+        brew install doxygen pkg-config cmake coreutils ninja graphviz grpc
+    - name: workaround for https://github.com/actions/virtual-environments/issues/2228
+      run: echo "yes" | $ANDROID_HOME/tools/bin/sdkmanager "cmake;3.18.1" --channel=3
+    - name: workaround for https://github.com/actions/virtual-environments/issues/2228
+      run: echo cmake.dir=/usr/local > external/helio-workstation/Projects/Android
+    - name: build
+      run: make MINIMIZE_INTERMEDIATES=1
+      env:
+        ANDROID_SDK_ROOT: /Users/runner/Library/Android/sdk

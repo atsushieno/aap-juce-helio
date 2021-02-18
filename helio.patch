@@ -1,0 +1,180 @@
+diff --git a/Projects/Android/app/CMakeLists.txt b/Projects/Android/app/CMakeLists.txt
+index 9f999ac7..678e5061 100644
+--- a/Projects/Android/app/CMakeLists.txt
++++ b/Projects/Android/app/CMakeLists.txt
+@@ -8,7 +8,7 @@ set(BINARY_NAME "juce_jni")
+ add_library("cpufeatures" STATIC "${ANDROID_NDK}/sources/android/cpufeatures/cpu-features.c")
+ set_source_files_properties("${ANDROID_NDK}/sources/android/cpufeatures/cpu-features.c" PROPERTIES COMPILE_FLAGS "-Wno-sign-conversion -Wno-gnu-statement-expression")
+ 
+-add_definitions("-DJUCE_ANDROID=1" "-DJUCE_ANDROID_API_VERSION=21" "-DJUCE_ANDROID_GL_ES_VERSION_3_0=1" "-DJUCER_ANDROIDSTUDIO_6AB8437A=1" "-DJUCE_APP_VERSION=3.4" "-DJUCE_APP_VERSION_HEX=0x30400")
++add_definitions("-DJUCE_ANDROID=1" "-DJUCE_ANDROID_API_VERSION=29" "-DJUCE_ANDROID_GL_ES_VERSION_3_0=1" "-DJUCER_ANDROIDSTUDIO_6AB8437A=1" "-DJUCE_APP_VERSION=3.4" "-DJUCE_APP_VERSION_HEX=0x30400")
+ 
+ include_directories( AFTER
+     "../../../ThirdParty/JUCE/modules/juce_audio_processors/format_types/VST3_SDK"
+@@ -86,6 +86,8 @@ if(JUCE_BUILD_CONFIGURATION MATCHES "DEBUG")
+         "../../../Source/UI/Sequencer/PianoRoll"
+         "../../../Source/UI/Sequencer/Sidebars"
+         "../../../Source/UI/Themes"
++	"../../../../android-audio-plugin-framework/native/plugin-api/include"
++	"../../../../android-audio-plugin-framework/native/androidaudioplugin/core/include"
+     )
+ 
+ elseif(JUCE_BUILD_CONFIGURATION MATCHES "RELEASE")
+@@ -155,6 +157,8 @@ elseif(JUCE_BUILD_CONFIGURATION MATCHES "RELEASE")
+         "../../../Source/UI/Sequencer/PianoRoll"
+         "../../../Source/UI/Sequencer/Sidebars"
+         "../../../Source/UI/Themes"
++	"../../../../android-audio-plugin-framework/native/plugin-api/include"
++	"../../../../android-audio-plugin-framework/native/androidaudioplugin/core/include"
+     )
+ 
+ else()
+@@ -181,6 +185,7 @@ add_library( ${BINARY_NAME}
+     "../../Projucer/JuceLibraryCode/include_juce_opengl.cpp"
+     "../../Projucer/JuceLibraryCode/JuceHeader.h"
+     "../../Projucer/JuceLibraryCode/UnityBuild.cpp"
++    "../../../../../juceaap.cpp"
+ )
+ 
+ set_source_files_properties("../../Projucer/JuceLibraryCode/AppConfig.h" PROPERTIES HEADER_FILE_ONLY TRUE)
+@@ -202,6 +207,10 @@ find_library(android "android")
+ find_library(glesv3 "GLESv3")
+ find_library(egl "EGL")
+ 
++target_link_directories( ${BINARY_NAME} PRIVATE
++    ../../../../../dummy-aap-dir/jni/${ANDROID_ABI}
++)
++
+ target_link_libraries( ${BINARY_NAME}
+ 
+     ${log}
+@@ -209,4 +218,5 @@ target_link_libraries( ${BINARY_NAME}
+     ${glesv3}
+     ${egl}
+     "cpufeatures"
++    androidaudioplugin
+ )
+diff --git a/Projects/Android/app/build.gradle b/Projects/Android/app/build.gradle
+index aa494a3e..30eafcdf 100644
+--- a/Projects/Android/app/build.gradle
++++ b/Projects/Android/app/build.gradle
+@@ -1,29 +1,20 @@
+ apply plugin: 'com.android.application'
+ 
+ android {
+-    compileSdkVersion 28
++    compileSdkVersion 30
+     externalNativeBuild {
+         cmake {
+             path "CMakeLists.txt"
+         }
+     }
+-    signingConfigs {
+-        juceSigning {
+-            storeFile     file("${System.properties['user.home']}${File.separator}helio.keystore")
+-            storePassword "android"
+-            keyAlias      "release"
+-            keyPassword   "android"
+-            storeType     "jks"
+-        }
+-    }
+ 
+     defaultConfig {
+         applicationId "fm.helio"
+-        minSdkVersion    21
+-        targetSdkVersion 28
++        minSdkVersion    29
++        targetSdkVersion 30
+         externalNativeBuild {
+             cmake {
+-                arguments "-DANDROID_TOOLCHAIN=clang", "-DANDROID_PLATFORM=android-21", "-DANDROID_STL=c++_static", "-DANDROID_CPP_FEATURES=exceptions rtti", "-DANDROID_ARM_MODE=arm", "-DANDROID_ARM_NEON=TRUE", "-DCMAKE_CXX_STANDARD=11", "-DCMAKE_CXX_EXTENSIONS=OFF"
++                arguments "-DANDROID_TOOLCHAIN=clang", "-DANDROID_PLATFORM=android-30", "-DANDROID_STL=c++_static", "-DANDROID_CPP_FEATURES=exceptions rtti", "-DANDROID_ARM_MODE=arm", "-DANDROID_ARM_NEON=TRUE", "-DCMAKE_CXX_STANDARD=11", "-DCMAKE_CXX_EXTENSIONS=OFF"
+             }
+         }
+     }
+@@ -33,13 +24,11 @@ android {
+              initWith debug
+              debuggable    true
+              jniDebuggable true
+-             signingConfig signingConfigs.juceSigning
+          }
+          release {
+              initWith release
+              debuggable    false
+              jniDebuggable false
+-             signingConfig signingConfigs.juceSigning
+          }
+     }
+ 
+@@ -102,3 +91,7 @@ ndkVersion "21.3.6528147"
+ 
+ }
+ 
++dependencies {
++    implementation 'org.androidaudioplugin:androidaudioplugin:0.6.6'
++}
++
+diff --git a/Projects/Android/app/src/main/AndroidManifest.xml b/Projects/Android/app/src/main/AndroidManifest.xml
+index 4a204711..7c983ffc 100644
+--- a/Projects/Android/app/src/main/AndroidManifest.xml
++++ b/Projects/Android/app/src/main/AndroidManifest.xml
+@@ -2,6 +2,12 @@
+ 
+ <manifest xmlns:android="http://schemas.android.com/apk/res/android" android:versionCode="33" android:versionName="3.4"
+           package="fm.helio">
++  <queries>
++    <intent>
++      <action android:name="org.androidaudioplugin.AudioPluginService" />
++    </intent>
++  </queries>
++
+   <supports-screens android:smallScreens="true" android:normalScreens="true" android:largeScreens="true" android:anyDensity="true"
+                     android:xlargeScreens="true"/>
+   <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+diff --git a/Projects/Android/build.gradle b/Projects/Android/build.gradle
+index 0fe5b4aa..e156e22c 100644
+--- a/Projects/Android/build.gradle
++++ b/Projects/Android/build.gradle
+@@ -4,12 +4,13 @@ buildscript {
+        jcenter()
+    }
+    dependencies {
+-       classpath 'com.android.tools.build:gradle:4.0.0'
++       classpath 'com.android.tools.build:gradle:7.0.0-alpha04'
+    }
+ }
+ 
+ allprojects {
+    repositories {
++       mavenLocal()
+        google()
+        jcenter()
+    }
+diff --git a/Projects/Android/gradle/wrapper/gradle-wrapper.properties b/Projects/Android/gradle/wrapper/gradle-wrapper.properties
+index 49479605..45c4019f 100644
+--- a/Projects/Android/gradle/wrapper/gradle-wrapper.properties
++++ b/Projects/Android/gradle/wrapper/gradle-wrapper.properties
+@@ -1 +1 @@
+-distributionUrl=https\://services.gradle.org/distributions/gradle-6.1.1-all.zip
+\ No newline at end of file
++distributionUrl=https://services.gradle.org/distributions/gradle-6.8-rc-1-all.zip
+\ No newline at end of file
+diff --git a/Source/Core/Audio/AudioCore.cpp b/Source/Core/Audio/AudioCore.cpp
+index 5e6df7e8..57a60ddf 100644
+--- a/Source/Core/Audio/AudioCore.cpp
++++ b/Source/Core/Audio/AudioCore.cpp
+@@ -23,11 +23,14 @@
+ #include "SerializationKeys.h"
+ #include "AudioMonitor.h"
+ 
++#include "../../../../../external/aap-juce/modules/juceaap_audio_processors/juce_android_audio_plugin_format.h"
++
+ void AudioCore::initAudioFormats(AudioPluginFormatManager &formatManager)
+ {
+     formatManager.addDefaultFormats();
+     formatManager.addFormat(new InternalPluginFormat());
+     formatManager.addFormat(new BuiltInSynthFormat());
++    formatManager.addFormat(new juceaap::AndroidAudioPluginFormat());
+ }
+ 
+ AudioCore::AudioCore()
