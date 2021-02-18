@@ -115,7 +115,7 @@ index aa494a3e..30eafcdf 100644
 +}
 +
 diff --git a/Projects/Android/app/src/main/AndroidManifest.xml b/Projects/Android/app/src/main/AndroidManifest.xml
-index 4a204711..7c983ffc 100644
+index 4a204711..6d86cf2f 100644
 --- a/Projects/Android/app/src/main/AndroidManifest.xml
 +++ b/Projects/Android/app/src/main/AndroidManifest.xml
 @@ -2,6 +2,12 @@
@@ -131,6 +131,14 @@ index 4a204711..7c983ffc 100644
    <supports-screens android:smallScreens="true" android:normalScreens="true" android:largeScreens="true" android:anyDensity="true"
                      android:xlargeScreens="true"/>
    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+@@ -15,6 +21,7 @@
+   <uses-feature android:glEsVersion="0x00030000" android:required="true"/>
+   <application android:label="@string/app_name" android:name="com.rmsl.juce.JuceApp" android:theme="@android:style/Theme.Black.NoTitleBar.Fullscreen"
+                android:icon="@drawable/icon" android:hardwareAccelerated="false">
++    <provider android:authorities="org.androidaudioplugin.AudioPluginNativeHostContentProvider.Helio" android:name="org.androidaudioplugin.AudioPluginNativeHostContentProvider"/>
+     <activity android:name="android.app.Activity" android:label="@string/app_name" android:configChanges="keyboardHidden|orientation|screenSize"
+               android:screenOrientation="userLandscape" android:launchMode="singleTask" android:hardwareAccelerated="true">
+       <intent-filter>
 diff --git a/Projects/Android/build.gradle b/Projects/Android/build.gradle
 index 0fe5b4aa..e156e22c 100644
 --- a/Projects/Android/build.gradle
@@ -160,13 +168,14 @@ index 49479605..45c4019f 100644
 +distributionUrl=https://services.gradle.org/distributions/gradle-6.8-rc-1-all.zip
 \ No newline at end of file
 diff --git a/Source/Core/Audio/AudioCore.cpp b/Source/Core/Audio/AudioCore.cpp
-index 5e6df7e8..57a60ddf 100644
+index 5e6df7e8..b9c4b077 100644
 --- a/Source/Core/Audio/AudioCore.cpp
 +++ b/Source/Core/Audio/AudioCore.cpp
-@@ -23,11 +23,14 @@
+@@ -23,11 +23,16 @@
  #include "SerializationKeys.h"
  #include "AudioMonitor.h"
  
++#include "aap/audio-plugin-host.h"
 +#include "../../../../../external/aap-juce/modules/juceaap_audio_processors/juce_android_audio_plugin_format.h"
 +
  void AudioCore::initAudioFormats(AudioPluginFormatManager &formatManager)
@@ -174,6 +183,7 @@ index 5e6df7e8..57a60ddf 100644
      formatManager.addDefaultFormats();
      formatManager.addFormat(new InternalPluginFormat());
      formatManager.addFormat(new BuiltInSynthFormat());
++    aap::getPluginHostPAL()->setPluginListCache(aap::getPluginHostPAL()->getInstalledPlugins());
 +    formatManager.addFormat(new juceaap::AndroidAudioPluginFormat());
  }
  
