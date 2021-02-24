@@ -111,7 +111,7 @@ index aa494a3e..30eafcdf 100644
  }
  
 +dependencies {
-+    implementation 'org.androidaudioplugin:androidaudioplugin:0.6.6'
++    implementation 'org.androidaudioplugin:androidaudioplugin:0.6.7'
 +}
 +
 diff --git a/Projects/Android/app/src/main/AndroidManifest.xml b/Projects/Android/app/src/main/AndroidManifest.xml
