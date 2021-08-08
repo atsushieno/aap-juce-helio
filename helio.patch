@@ -688,10 +688,3 @@ index 18ec6546..79450b3a 100644
      this->patternViewport->setPaintingIsUnclipped(true);
  
      this->patternRoll = make<PatternRoll>(this->project,
-diff --git a/ThirdParty/JUCE b/ThirdParty/JUCE
-index c188db98..90e8da0c 160000
---- a/ThirdParty/JUCE
-+++ b/ThirdParty/JUCE
-@@ -1 +1 @@
--Subproject commit c188db98000ef02773e72a87343251e7ddc01ac2
-+Subproject commit 90e8da0cfb54ac593cdbed74c3d0c9b09bad3a9f
