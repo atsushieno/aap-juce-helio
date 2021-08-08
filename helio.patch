@@ -1,5 +1,5 @@
 diff --git a/Projects/Android/app/CMakeLists.txt b/Projects/Android/app/CMakeLists.txt
-index 75c470a9..047d5c2f 100644
+index 75c470a9..3e870e42 100644
 --- a/Projects/Android/app/CMakeLists.txt
 +++ b/Projects/Android/app/CMakeLists.txt
 @@ -8,7 +8,7 @@ set(BINARY_NAME "juce_jni")
@@ -7,7 +7,7 @@ index 75c470a9..047d5c2f 100644
  set_source_files_properties("${ANDROID_NDK}/sources/android/cpufeatures/cpu-features.c" PROPERTIES COMPILE_FLAGS "-Wno-sign-conversion -Wno-gnu-statement-expression")
  
 -add_definitions("-DJUCE_ANDROID=1" "-DJUCE_ANDROID_API_VERSION=21" "-DJUCE_ANDROID_GL_ES_VERSION_3_0=1" "-DJUCER_ANDROIDSTUDIO_6AB8437A=1" "-DJUCE_APP_VERSION=3.7" "-DJUCE_APP_VERSION_HEX=0x30700")
-+add_definitions("-DJUCE_ANDROID=1" "-DJUCE_ANDROID_API_VERSION=29" "-DJUCE_ANDROID_GL_ES_VERSION_3_0=1" "-DJUCER_ANDROIDSTUDIO_6AB8437A=1" "-DJUCE_APP_VERSION=3.7" "-DJUCE_APP_VERSION_HEX=0x30700")
++add_definitions("-DJUCE_ANDROID=1" "-DJUCE_ANDROID_API_VERSION=29" "-DJUCE_ANDROID_GL_ES_VERSION_3_0=1" "-DJUCER_ANDROIDSTUDIO_6AB8437A=1" "-DJUCE_APP_VERSION=3.7" "-DJUCE_APP_VERSION_HEX=0x30700" "-DJUCE_PLUGINHOST_VST=0")
  
  include_directories( AFTER
      "../../../ThirdParty/JUCE/modules/juce_audio_processors/format_types/VST3_SDK"
@@ -188,3 +188,510 @@ index 7b0ac938..bc464c45 100644
  }
  
  AudioCore::AudioCore()
+diff --git a/Source/Core/Audio/BuiltIn/BuiltInSynthAudioPlugin.cpp b/Source/Core/Audio/BuiltIn/BuiltInSynthAudioPlugin.cpp
+index d7b03657..5461ae65 100644
+--- a/Source/Core/Audio/BuiltIn/BuiltInSynthAudioPlugin.cpp
++++ b/Source/Core/Audio/BuiltIn/BuiltInSynthAudioPlugin.cpp
+@@ -33,7 +33,7 @@ void BuiltInSynthAudioPlugin::fillInPluginDescription(PluginDescription &descrip
+ {
+     description.name = this->getName();
+     description.descriptiveName = description.name;
+-    description.uniqueId = description.name.hashCode();
++    description.uid = description.name.hashCode();
+     description.category = "Synth";
+     description.pluginFormatName = BuiltInSynthFormat::formatName;
+     description.fileOrIdentifier = BuiltInSynthFormat::formatIdentifier;
+diff --git a/Source/Core/Audio/BuiltIn/InternalPluginFormat.cpp b/Source/Core/Audio/BuiltIn/InternalPluginFormat.cpp
+index 2c5cca9d..da4d3387 100644
+--- a/Source/Core/Audio/BuiltIn/InternalPluginFormat.cpp
++++ b/Source/Core/Audio/BuiltIn/InternalPluginFormat.cpp
+@@ -66,22 +66,22 @@ bool InternalPluginFormat::fileMightContainThisPluginType(const String &fileOrId
+ void InternalPluginFormat::createPluginInstance(const PluginDescription &desc,
+     double initialSampleRate, int initialBufferSize, PluginCreationCallback callback)
+ {
+-    if (desc.uniqueId == this->audioOutDesc.uniqueId || desc.name.equalsIgnoreCase(this->audioOutDesc.name))
++    if (desc.uid == this->audioOutDesc.uid || desc.name.equalsIgnoreCase(this->audioOutDesc.name))
+     {
+         callback(make<AudioProcessorGraph::AudioGraphIOProcessor>(AudioProcessorGraph::AudioGraphIOProcessor::audioOutputNode), {});
+         return;
+     }
+-    if (desc.uniqueId == this->audioInDesc.uniqueId || desc.name.equalsIgnoreCase(this->audioInDesc.name))
++    if (desc.uid == this->audioInDesc.uid || desc.name.equalsIgnoreCase(this->audioInDesc.name))
+     {
+         callback(make<AudioProcessorGraph::AudioGraphIOProcessor>(AudioProcessorGraph::AudioGraphIOProcessor::audioInputNode), {});
+         return;
+     }
+-    if (desc.uniqueId == this->midiInDesc.uniqueId || desc.name.equalsIgnoreCase(this->midiInDesc.name))
++    if (desc.uid == this->midiInDesc.uid || desc.name.equalsIgnoreCase(this->midiInDesc.name))
+     {
+         callback(make<AudioProcessorGraph::AudioGraphIOProcessor>(AudioProcessorGraph::AudioGraphIOProcessor::midiInputNode), {});
+         return;
+     }
+-    else if (desc.uniqueId == this->midiOutDesc.uniqueId || desc.name.equalsIgnoreCase(this->midiOutDesc.name))
++    else if (desc.uid == this->midiOutDesc.uid || desc.name.equalsIgnoreCase(this->midiOutDesc.name))
+     {
+         callback(make<AudioProcessorGraph::AudioGraphIOProcessor>(AudioProcessorGraph::AudioGraphIOProcessor::midiOutputNode), {});
+         return;
+diff --git a/Source/Core/Audio/Instruments/SerializablePluginDescription.cpp b/Source/Core/Audio/Instruments/SerializablePluginDescription.cpp
+index 5e8203b3..7f7494ab 100644
+--- a/Source/Core/Audio/Instruments/SerializablePluginDescription.cpp
++++ b/Source/Core/Audio/Instruments/SerializablePluginDescription.cpp
+@@ -42,7 +42,7 @@ SerializedData SerializablePluginDescription::serialize() const
+     tree.setProperty(Audio::pluginVersion, this->version);
+     tree.setProperty(Audio::pluginFile, this->fileOrIdentifier);
+     tree.setProperty(Audio::pluginFileModTime, String::toHexString(this->lastFileModTime.toMilliseconds()));
+-    tree.setProperty(Audio::pluginId, String::toHexString(this->uniqueId));
++    tree.setProperty(Audio::pluginId, String::toHexString(this->uid));
+     tree.setProperty(Audio::pluginIsInstrument, this->isInstrument);
+     tree.setProperty(Audio::pluginNumInputs, this->numInputChannels);
+     tree.setProperty(Audio::pluginNumOutputs, this->numOutputChannels);
+@@ -69,7 +69,7 @@ void SerializablePluginDescription::deserialize(const SerializedData &data)
+         this->version = root.getProperty(Audio::pluginVersion);
+         this->fileOrIdentifier = root.getProperty(Audio::pluginFile);
+         this->lastFileModTime = Time(root.getProperty(Audio::pluginFileModTime).toString().getHexValue64());
+-        this->uniqueId = root.getProperty(Audio::pluginId).toString().getHexValue32();
++        this->uid = root.getProperty(Audio::pluginId).toString().getHexValue32();
+         this->isInstrument = root.getProperty(Audio::pluginIsInstrument, false);
+         this->numInputChannels = root.getProperty(Audio::pluginNumInputs);
+         this->numOutputChannels = root.getProperty(Audio::pluginNumOutputs);
+@@ -87,7 +87,7 @@ void SerializablePluginDescription::deserialize(const SerializedData &data)
+ void SerializablePluginDescription::reset()
+ {
+     this->name = {};
+-    this->uniqueId = {};
++    this->uid = {};
+ }
+ 
+ bool SerializablePluginDescription::isValid() const
+diff --git a/Source/Core/Tree/InstrumentNode.cpp b/Source/Core/Tree/InstrumentNode.cpp
+index 048f0cac..ab2a1159 100644
+--- a/Source/Core/Tree/InstrumentNode.cpp
++++ b/Source/Core/Tree/InstrumentNode.cpp
+@@ -258,7 +258,8 @@ public:
+ 
+     explicit HelioAudioProcessorEditor(AudioProcessor &p) : GenericAudioProcessorEditor(p)
+     {
+-        this->setFocusContainerType(Component::FocusContainerType::keyboardFocusContainer);
++        this->setFocusContainer(true);
++        this->setWantsKeyboardFocus(true);
+ 
+         for (int i = 0; i < this->getNumChildComponents(); ++i)
+         {
+diff --git a/Source/UI/Common/Origami/Origami.cpp b/Source/UI/Common/Origami/Origami.cpp
+index 357a9b3d..6b56331d 100644
+--- a/Source/UI/Common/Origami/Origami.cpp
++++ b/Source/UI/Common/Origami/Origami.cpp
+@@ -20,7 +20,7 @@
+ 
+ Origami::Origami()
+ {
+-    this->setFocusContainerType(Component::FocusContainerType::none);
++    this->setFocusContainer(false);
+     this->setWantsKeyboardFocus(false);
+     this->setMouseClickGrabsKeyboardFocus(false);
+     this->setInterceptsMouseClicks(false, true);
+diff --git a/Source/UI/MainLayout.cpp b/Source/UI/MainLayout.cpp
+index 496c4ea6..254e7bb9 100644
+--- a/Source/UI/MainLayout.cpp
++++ b/Source/UI/MainLayout.cpp
+@@ -113,7 +113,8 @@ MainLayout::MainLayout()
+ 
+     this->setOpaque(true);
+     this->setVisible(false);
+-    this->setFocusContainerType(Component::FocusContainerType::keyboardFocusContainer);
++    this->setFocusContainer(true);
++    this->setWantsKeyboardFocus(true);
+     this->setWantsKeyboardFocus(true);
+     this->setPaintingIsUnclipped(true);
+     this->setInterceptsMouseClicks(false, true);
+diff --git a/Source/UI/Menus/Base/MenuPanel.cpp b/Source/UI/Menus/Base/MenuPanel.cpp
+index b3a5ecec..60a65906 100644
+--- a/Source/UI/Menus/Base/MenuPanel.cpp
++++ b/Source/UI/Menus/Base/MenuPanel.cpp
+@@ -20,7 +20,7 @@
+ 
+ MenuPanel::MenuPanel()
+ {
+-    this->setFocusContainerType(Component::FocusContainerType::none);
++    this->setFocusContainer(false);
+     this->setInterceptsMouseClicks(false, true);
+     this->setMouseClickGrabsKeyboardFocus(false);
+ 
+diff --git a/Source/UI/Menus/Base/MenuPanel.h b/Source/UI/Menus/Base/MenuPanel.h
+index baea62a8..e6710aa3 100644
+--- a/Source/UI/Menus/Base/MenuPanel.h
++++ b/Source/UI/Menus/Base/MenuPanel.h
+@@ -25,7 +25,7 @@ struct MenuPanelUtils final
+     {
+         for (auto *child : panel->getChildren())
+         {
+-            child->setFocusContainerType(Component::FocusContainerType::none);
++            child->setFocusContainer(false);
+             child->setWantsKeyboardFocus(false);
+             child->setMouseClickGrabsKeyboardFocus(false);
+         }
+diff --git a/Source/UI/Pages/Dashboard/Dashboard.cpp b/Source/UI/Pages/Dashboard/Dashboard.cpp
+index f8778f6f..272bf7bd 100644
+--- a/Source/UI/Pages/Dashboard/Dashboard.cpp
++++ b/Source/UI/Pages/Dashboard/Dashboard.cpp
+@@ -32,7 +32,7 @@
+ 
+ Dashboard::Dashboard(Workspace &workspace) : workspace(workspace)
+ {
+-    this->setFocusContainerType(Component::FocusContainerType::none);
++    this->setFocusContainer(false);
+     this->setWantsKeyboardFocus(false);
+     this->setPaintingIsUnclipped(true);
+ 
+diff --git a/Source/UI/Pages/Dashboard/Menu/DashboardMenu.cpp b/Source/UI/Pages/Dashboard/Menu/DashboardMenu.cpp
+index b9bb1a35..ee5da440 100644
+--- a/Source/UI/Pages/Dashboard/Menu/DashboardMenu.cpp
++++ b/Source/UI/Pages/Dashboard/Menu/DashboardMenu.cpp
+@@ -25,7 +25,7 @@
+ DashboardMenu::DashboardMenu(Workspace &parentWorkspace) :
+     workspace(parentWorkspace)
+ {
+-    this->setFocusContainerType(Component::FocusContainerType::none);
++    this->setFocusContainer(false);
+ 
+     this->listBox = make<ListBox>();
+     this->addAndMakeVisible(this->listBox.get());
+diff --git a/Source/UI/Pages/Instruments/AudioPluginsListComponent.cpp b/Source/UI/Pages/Instruments/AudioPluginsListComponent.cpp
+index d1545ca2..7b2ac2ab 100644
+--- a/Source/UI/Pages/Instruments/AudioPluginsListComponent.cpp
++++ b/Source/UI/Pages/Instruments/AudioPluginsListComponent.cpp
+@@ -31,7 +31,7 @@ AudioPluginsListComponent::AudioPluginsListComponent(PluginScanner &pluginScanne
+     pluginScanner(pluginScanner),
+     instrumentsRoot(instrumentsRoot)
+ {
+-    this->setFocusContainerType(Component::FocusContainerType::none);
++    this->setFocusContainer(false);
+     this->setWantsKeyboardFocus(false);
+     this->setInterceptsMouseClicks(false, true);
+     this->setPaintingIsUnclipped(true);
+diff --git a/Source/UI/Pages/Instruments/Editor/AudioPluginEditorPage.cpp b/Source/UI/Pages/Instruments/Editor/AudioPluginEditorPage.cpp
+index 3625c4f7..2c5586c8 100644
+--- a/Source/UI/Pages/Instruments/Editor/AudioPluginEditorPage.cpp
++++ b/Source/UI/Pages/Instruments/Editor/AudioPluginEditorPage.cpp
+@@ -22,7 +22,7 @@
+ 
+ AudioPluginEditorPage::AudioPluginEditorPage(Component *contentOwned)
+ {
+-    this->setFocusContainerType(Component::FocusContainerType::none);
++    this->setFocusContainer(false);
+     this->setWantsKeyboardFocus(false);
+ 
+     this->background = make<PanelBackgroundB>();
+diff --git a/Source/UI/Pages/Instruments/Editor/InstrumentEditor.cpp b/Source/UI/Pages/Instruments/Editor/InstrumentEditor.cpp
+index 5411c00d..2bdd098a 100644
+--- a/Source/UI/Pages/Instruments/Editor/InstrumentEditor.cpp
++++ b/Source/UI/Pages/Instruments/Editor/InstrumentEditor.cpp
+@@ -47,7 +47,7 @@ InstrumentEditor::InstrumentEditor(WeakReference<Instrument> instrument,
+     this->setOpaque(true);
+     
+     this->setWantsKeyboardFocus(false);
+-    this->setFocusContainerType(Component::FocusContainerType::none);
++    this->setFocusContainer(false);
+ }
+ 
+ InstrumentEditor::~InstrumentEditor()
+diff --git a/Source/UI/Pages/Instruments/Editor/KeyboardMappingPage.cpp b/Source/UI/Pages/Instruments/Editor/KeyboardMappingPage.cpp
+index d8a8379b..0914ed93 100644
+--- a/Source/UI/Pages/Instruments/Editor/KeyboardMappingPage.cpp
++++ b/Source/UI/Pages/Instruments/Editor/KeyboardMappingPage.cpp
+@@ -29,7 +29,7 @@
+ KeyboardMappingPage::KeyboardMappingPage(WeakReference<Instrument> instrument) :
+     instrument(instrument)
+ {
+-    this->setFocusContainerType(Component::FocusContainerType::none);
++    this->setFocusContainer(false);
+     this->setWantsKeyboardFocus(false);
+     this->setPaintingIsUnclipped(true);
+ 
+diff --git a/Source/UI/Pages/Instruments/InstrumentsListComponent.cpp b/Source/UI/Pages/Instruments/InstrumentsListComponent.cpp
+index f95f8e8b..354ebd12 100644
+--- a/Source/UI/Pages/Instruments/InstrumentsListComponent.cpp
++++ b/Source/UI/Pages/Instruments/InstrumentsListComponent.cpp
+@@ -28,7 +28,7 @@ InstrumentsListComponent::InstrumentsListComponent(PluginScanner &pluginScanner,
+     pluginScanner(pluginScanner),
+     instrumentsRoot(instrumentsRoot)
+ {
+-    this->setFocusContainerType(Component::FocusContainerType::none);
++    this->setFocusContainer(false);
+     this->setWantsKeyboardFocus(false);
+     this->setInterceptsMouseClicks(false, true);
+     this->setPaintingIsUnclipped(true);
+diff --git a/Source/UI/Pages/Instruments/OrchestraPitPage.cpp b/Source/UI/Pages/Instruments/OrchestraPitPage.cpp
+index 3fa575b5..9ccad823 100644
+--- a/Source/UI/Pages/Instruments/OrchestraPitPage.cpp
++++ b/Source/UI/Pages/Instruments/OrchestraPitPage.cpp
+@@ -31,7 +31,7 @@ OrchestraPitPage::OrchestraPitPage(PluginScanner &pluginScanner, OrchestraPitNod
+ {
+     this->setComponentID(ComponentIDs::orchestraPit);
+ 
+-    this->setFocusContainerType(Component::FocusContainerType::none);
++    this->setFocusContainer(false);
+     this->setWantsKeyboardFocus(false);
+     this->setInterceptsMouseClicks(false, true);
+     this->setPaintingIsUnclipped(true);
+diff --git a/Source/UI/Pages/Project/ProjectPage.cpp b/Source/UI/Pages/Project/ProjectPage.cpp
+index 690f72a1..2e0a6945 100644
+--- a/Source/UI/Pages/Project/ProjectPage.cpp
++++ b/Source/UI/Pages/Project/ProjectPage.cpp
+@@ -43,7 +43,8 @@ static String getTimeString(const RelativeTime &time)
+ ProjectPage::ProjectPage(ProjectNode &parentProject) :
+     project(parentProject)
+ {
+-    this->setFocusContainerType(Component::FocusContainerType::keyboardFocusContainer);
++    this->setFocusContainer(true);
++    this->setWantsKeyboardFocus(true);
+     this->setWantsKeyboardFocus(true);
+     this->setPaintingIsUnclipped(true);
+ 
+diff --git a/Source/UI/Pages/Settings/SettingsPage.cpp b/Source/UI/Pages/Settings/SettingsPage.cpp
+index f24da9fc..4b0a7725 100644
+--- a/Source/UI/Pages/Settings/SettingsPage.cpp
++++ b/Source/UI/Pages/Settings/SettingsPage.cpp
+@@ -35,7 +35,8 @@ SettingsPage::SettingsPage(Component *settingsList)
+ 
+     this->viewport->setViewedComponent(settingsList, false);
+ 
+-    this->setFocusContainerType(Component::FocusContainerType::keyboardFocusContainer);
++    this->setFocusContainer(true);
++    this->setWantsKeyboardFocus(true);
+     this->setWantsKeyboardFocus(true);
+     this->setPaintingIsUnclipped(true);
+ 
+diff --git a/Source/UI/Pages/Settings/SyncSettings.cpp b/Source/UI/Pages/Settings/SyncSettings.cpp
+index 849deec2..10c2c2fe 100644
+--- a/Source/UI/Pages/Settings/SyncSettings.cpp
++++ b/Source/UI/Pages/Settings/SyncSettings.cpp
+@@ -27,7 +27,7 @@
+ 
+ SyncSettings::SyncSettings()
+ {
+-    this->setFocusContainerType(Component::FocusContainerType::none);
++    this->setFocusContainer(false);
+     this->setWantsKeyboardFocus(false);
+     this->setPaintingIsUnclipped(true);
+ 
+diff --git a/Source/UI/Pages/Settings/ThemeSettings.cpp b/Source/UI/Pages/Settings/ThemeSettings.cpp
+index f51ac8e4..f9fa20d6 100644
+--- a/Source/UI/Pages/Settings/ThemeSettings.cpp
++++ b/Source/UI/Pages/Settings/ThemeSettings.cpp
+@@ -22,7 +22,7 @@
+ 
+ ThemeSettings::ThemeSettings()
+ {
+-    this->setFocusContainerType(Component::FocusContainerType::none);
++    this->setFocusContainer(false);
+     this->setWantsKeyboardFocus(false);
+     this->setPaintingIsUnclipped(true);
+ 
+diff --git a/Source/UI/Pages/Settings/TranslationSettings.cpp b/Source/UI/Pages/Settings/TranslationSettings.cpp
+index 0bec1cfa..0c8ee0bf 100644
+--- a/Source/UI/Pages/Settings/TranslationSettings.cpp
++++ b/Source/UI/Pages/Settings/TranslationSettings.cpp
+@@ -23,7 +23,7 @@
+ 
+ TranslationSettings::TranslationSettings()
+ {
+-    this->setFocusContainerType(Component::FocusContainerType::none);
++    this->setFocusContainer(false);
+     this->setWantsKeyboardFocus(false);
+     this->setPaintingIsUnclipped(true);
+ 
+diff --git a/Source/UI/Pages/Settings/UserInterfaceSettings.cpp b/Source/UI/Pages/Settings/UserInterfaceSettings.cpp
+index d572d11a..2f70462f 100644
+--- a/Source/UI/Pages/Settings/UserInterfaceSettings.cpp
++++ b/Source/UI/Pages/Settings/UserInterfaceSettings.cpp
+@@ -25,7 +25,7 @@
+ 
+ UserInterfaceSettings::UserInterfaceSettings()
+ {
+-    this->setFocusContainerType(Component::FocusContainerType::none);
++    this->setFocusContainer(false);
+     this->setWantsKeyboardFocus(false);
+     this->setPaintingIsUnclipped(true);
+ 
+diff --git a/Source/UI/Pages/VCS/VersionControlEditor.cpp b/Source/UI/Pages/VCS/VersionControlEditor.cpp
+index b803f431..bceaeb7a 100644
+--- a/Source/UI/Pages/VCS/VersionControlEditor.cpp
++++ b/Source/UI/Pages/VCS/VersionControlEditor.cpp
+@@ -23,7 +23,7 @@
+ 
+ VersionControlEditor::VersionControlEditor(VersionControl &versionControl) : vcs(versionControl)
+ {
+-    this->setFocusContainerType(Component::FocusContainerType::none);
++    this->setFocusContainer(false);
+     this->setWantsKeyboardFocus(false);
+     this->setPaintingIsUnclipped(true);
+ 
+diff --git a/Source/UI/Popups/ChordPreviewTool.cpp b/Source/UI/Popups/ChordPreviewTool.cpp
+index 013e3506..70b20994 100644
+--- a/Source/UI/Popups/ChordPreviewTool.cpp
++++ b/Source/UI/Popups/ChordPreviewTool.cpp
+@@ -69,7 +69,7 @@ ChordPreviewTool::ChordPreviewTool(PianoRoll &caller,
+         this->addAndMakeVisible(button);
+     }
+ 
+-    this->setFocusContainerType(Component::FocusContainerType::focusContainer);
++    this->setFocusContainer(true);
+     this->setInterceptsMouseClicks(false, true);
+     this->enterModalState(false, nullptr, true); // deleted when dismissed
+ 
+diff --git a/Source/UI/Popups/GenericTooltip.h b/Source/UI/Popups/GenericTooltip.h
+index bef3278f..c821d1a5 100644
+--- a/Source/UI/Popups/GenericTooltip.h
++++ b/Source/UI/Popups/GenericTooltip.h
+@@ -23,7 +23,7 @@ public:
+ 
+     explicit GenericTooltip(const String &tooltip) : message(tooltip)
+     {
+-        this->setFocusContainerType(Component::FocusContainerType::none);
++        this->setFocusContainer(false);
+         this->setWantsKeyboardFocus(false);
+         this->setInterceptsMouseClicks(false, false);
+         this->setPaintingIsUnclipped(true);
+diff --git a/Source/UI/Popups/HelioCallout.cpp b/Source/UI/Popups/HelioCallout.cpp
+index 1bf72eb7..794afd32 100644
+--- a/Source/UI/Popups/HelioCallout.cpp
++++ b/Source/UI/Popups/HelioCallout.cpp
+@@ -31,7 +31,7 @@ HelioCallout::HelioCallout(Component &c, Component *pointAtComponent,
+ {
+     jassert(parentWorkspace);
+ 
+-    this->setFocusContainerType(Component::FocusContainerType::none);
++    this->setFocusContainer(false);
+     this->setWantsKeyboardFocus(false);
+     this->setInterceptsMouseClicks(false, true);
+     this->setPaintingIsUnclipped(true);
+diff --git a/Source/UI/Popups/NotesTuningPanel.cpp b/Source/UI/Popups/NotesTuningPanel.cpp
+index 3af8aca2..a8502777 100644
+--- a/Source/UI/Popups/NotesTuningPanel.cpp
++++ b/Source/UI/Popups/NotesTuningPanel.cpp
+@@ -191,7 +191,7 @@ NotesTuningPanel::NotesTuningPanel(ProjectNode &parentProject, PianoRoll &target
+ 
+     //[UserPreSize]
+     this->syncSliders();
+-    this->setFocusContainerType(Component::FocusContainerType::none);
++    this->setFocusContainer(false);
+     this->setWantsKeyboardFocus(false);
+     this->setMouseClickGrabsKeyboardFocus(false);
+ 
+diff --git a/Source/UI/Popups/ScalePreviewTool.cpp b/Source/UI/Popups/ScalePreviewTool.cpp
+index dc3c988a..086eabfa 100644
+--- a/Source/UI/Popups/ScalePreviewTool.cpp
++++ b/Source/UI/Popups/ScalePreviewTool.cpp
+@@ -166,7 +166,7 @@ ScalePreviewTool::ScalePreviewTool(PianoRoll *caller, MidiSequence *layer)
+     static constexpr auto toolSize = 500;
+     this->setSize(toolSize, toolSize);
+ 
+-    this->setFocusContainerType(Component::FocusContainerType::focusContainer);
++    this->setFocusContainer(true);
+ 
+     this->setInterceptsMouseClicks(false, true);
+     this->enterModalState(false, nullptr, true);
+diff --git a/Source/UI/Sequencer/Header/RollHeader.cpp b/Source/UI/Sequencer/Header/RollHeader.cpp
+index 0781a88c..edc0aa80 100644
+--- a/Source/UI/Sequencer/Header/RollHeader.cpp
++++ b/Source/UI/Sequencer/Header/RollHeader.cpp
+@@ -164,7 +164,7 @@ RollHeader::RollHeader(Transport &transport, RollBase &roll, Viewport &viewport)
+ {
+     this->setOpaque(true);
+     this->setAlwaysOnTop(true);
+-    this->setFocusContainerType(Component::FocusContainerType::none);
++    this->setFocusContainer(false);
+     this->setWantsKeyboardFocus(false);
+     this->setPaintingIsUnclipped(true);
+     this->setMouseClickGrabsKeyboardFocus(false);
+diff --git a/Source/UI/Sequencer/PatternRoll/ClipComponents/AutomationCurveClip/AutomationCurveEventComponent.cpp b/Source/UI/Sequencer/PatternRoll/ClipComponents/AutomationCurveClip/AutomationCurveEventComponent.cpp
+index 7d7b33ad..eada5838 100644
+--- a/Source/UI/Sequencer/PatternRoll/ClipComponents/AutomationCurveClip/AutomationCurveEventComponent.cpp
++++ b/Source/UI/Sequencer/PatternRoll/ClipComponents/AutomationCurveClip/AutomationCurveEventComponent.cpp
+@@ -34,7 +34,7 @@ AutomationCurveEventComponent::AutomationCurveEventComponent(AutomationCurveClip
+     editor(parent),
+     controllerNumber(event.getTrackControllerNumber())
+ {
+-    this->setFocusContainerType(Component::FocusContainerType::none);
++    this->setFocusContainer(false);
+     this->setWantsKeyboardFocus(false);
+     this->setMouseCursor(MouseCursor::PointingHandCursor);
+ 
+diff --git a/Source/UI/Sequencer/PatternRoll/ClipComponents/AutomationCurveClip/AutomationCurveEventsConnector.cpp b/Source/UI/Sequencer/PatternRoll/ClipComponents/AutomationCurveClip/AutomationCurveEventsConnector.cpp
+index acfcd389..c14c880e 100644
+--- a/Source/UI/Sequencer/PatternRoll/ClipComponents/AutomationCurveClip/AutomationCurveEventsConnector.cpp
++++ b/Source/UI/Sequencer/PatternRoll/ClipComponents/AutomationCurveClip/AutomationCurveEventsConnector.cpp
+@@ -26,7 +26,7 @@ AutomationCurveEventsConnector::AutomationCurveEventsConnector(
+     component1(c1),
+     component2(c2)
+ {
+-    this->setFocusContainerType(Component::FocusContainerType::none);
++    this->setFocusContainer(false);
+     this->setWantsKeyboardFocus(false);
+     this->setPaintingIsUnclipped(true);
+     this->setInterceptsMouseClicks(false, false);
+diff --git a/Source/UI/Sequencer/PatternRoll/ClipComponents/AutomationCurveClip/AutomationCurveHelper.cpp b/Source/UI/Sequencer/PatternRoll/ClipComponents/AutomationCurveClip/AutomationCurveHelper.cpp
+index 143697c6..2d4436d9 100644
+--- a/Source/UI/Sequencer/PatternRoll/ClipComponents/AutomationCurveClip/AutomationCurveHelper.cpp
++++ b/Source/UI/Sequencer/PatternRoll/ClipComponents/AutomationCurveClip/AutomationCurveHelper.cpp
+@@ -27,7 +27,7 @@ AutomationCurveHelper::AutomationCurveHelper(const AutomationEvent &event,
+     component1(target1),
+     component2(target2)
+ {
+-    this->setFocusContainerType(Component::FocusContainerType::none);
++    this->setFocusContainer(false);
+     this->setWantsKeyboardFocus(false);
+     this->setMouseCursor(MouseCursor::UpDownResizeCursor);
+ 
+diff --git a/Source/UI/Sequencer/RollBase.cpp b/Source/UI/Sequencer/RollBase.cpp
+index c7f0d19e..169fdb93 100644
+--- a/Source/UI/Sequencer/RollBase.cpp
++++ b/Source/UI/Sequencer/RollBase.cpp
+@@ -90,7 +90,7 @@ RollBase::RollBase(ProjectNode &parentProject, Viewport &viewportRef,
+ 
+     this->setMouseClickGrabsKeyboardFocus(false);
+     this->setWantsKeyboardFocus(false);
+-    this->setFocusContainerType(Component::FocusContainerType::none);
++    this->setFocusContainer(false);
+ 
+     this->temperament = this->project.getProjectInfo()->getTemperament();
+ 
+@@ -116,7 +116,7 @@ RollBase::RollBase(ProjectNode &parentProject, Viewport &viewportRef,
+ 
+     this->lassoComponent = make<SelectionComponent>();
+     this->lassoComponent->setWantsKeyboardFocus(false);
+-    this->lassoComponent->setFocusContainerType(Component::FocusContainerType::none);
++    this->lassoComponent->setFocusContainer(false);
+ 
+     this->addAndMakeVisible(this->header.get());
+     this->addAndMakeVisible(this->headerShadow.get());
+diff --git a/Source/UI/Sequencer/SequencerLayout.cpp b/Source/UI/Sequencer/SequencerLayout.cpp
+index 18ec6546..79450b3a 100644
+--- a/Source/UI/Sequencer/SequencerLayout.cpp
++++ b/Source/UI/Sequencer/SequencerLayout.cpp
+@@ -437,7 +437,7 @@ SequencerLayout::SequencerLayout(ProjectNode &parentProject) :
+     this->pianoViewport->setInterceptsMouseClicks(false, true);
+     this->pianoViewport->setScrollBarsShown(false, false);
+     this->pianoViewport->setWantsKeyboardFocus(false);
+-    this->pianoViewport->setFocusContainerType(Component::FocusContainerType::none);
++    this->pianoViewport->setFocusContainer(false);
+     this->pianoViewport->setPaintingIsUnclipped(true);
+     
+     this->pianoRoll = make<PianoRoll>(this->project,
+@@ -448,7 +448,7 @@ SequencerLayout::SequencerLayout(ProjectNode &parentProject) :
+     this->patternViewport->setInterceptsMouseClicks(false, true);
+     this->patternViewport->setScrollBarsShown(false, false);
+     this->patternViewport->setWantsKeyboardFocus(false);
+-    this->patternViewport->setFocusContainerType(Component::FocusContainerType::none);
++    this->patternViewport->setFocusContainer(false);
+     this->patternViewport->setPaintingIsUnclipped(true);
+ 
+     this->patternRoll = make<PatternRoll>(this->project,
+diff --git a/ThirdParty/JUCE b/ThirdParty/JUCE
+index c188db98..90e8da0c 160000
+--- a/ThirdParty/JUCE
++++ b/ThirdParty/JUCE
+@@ -1 +1 @@
+-Subproject commit c188db98000ef02773e72a87343251e7ddc01ac2
++Subproject commit 90e8da0cfb54ac593cdbed74c3d0c9b09bad3a9f
