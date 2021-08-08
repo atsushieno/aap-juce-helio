@@ -13,6 +13,7 @@ build-aap-core:
 
 build-helio: .stamp-aap patch-helio
 	cp gradle.properties $(ANDROID_APP_DIR)
+	cd ThirdParty/JUCE && git checkout master && cd ../..
 	cd $(ANDROID_APP_DIR) && ./gradlew build
 
 .stamp-aap: dummy-aap-dir
