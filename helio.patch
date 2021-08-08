@@ -111,7 +111,7 @@ index aa494a3e..30eafcdf 100644
  }
  
 +dependencies {
-+    implementation 'org.androidaudioplugin:androidaudioplugin:0.6.7'
++    implementation 'org.androidaudioplugin:androidaudioplugin:0.6.19'
 +}
 +
 diff --git a/Projects/Android/app/src/main/AndroidManifest.xml b/Projects/Android/app/src/main/AndroidManifest.xml
@@ -148,7 +148,7 @@ index 0fe5b4aa..e156e22c 100644
     }
     dependencies {
 -       classpath 'com.android.tools.build:gradle:4.0.0'
-+       classpath 'com.android.tools.build:gradle:7.0.0-alpha04'
++       classpath 'com.android.tools.build:gradle:7.1.0-alpha06'
     }
  }
  
@@ -165,7 +165,7 @@ index 49479605..45c4019f 100644
 @@ -1 +1 @@
 -distributionUrl=https\://services.gradle.org/distributions/gradle-6.1.1-all.zip
 \ No newline at end of file
-+distributionUrl=https://services.gradle.org/distributions/gradle-6.8-rc-1-all.zip
++distributionUrl=https://services.gradle.org/distributions/gradle-7.1.1-all.zip
 \ No newline at end of file
 diff --git a/Source/Core/Audio/AudioCore.cpp b/Source/Core/Audio/AudioCore.cpp
 index 5e6df7e8..b9c4b077 100644
