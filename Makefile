@@ -12,8 +12,8 @@ build-aap-core:
 	cd $(AAP_DIR) && make
 
 build-helio: .stamp-aap patch-helio
+	cd external/helio-workstation/ThirdParty/JUCE && git checkout master && cd ../../../..
 	cp gradle.properties $(ANDROID_APP_DIR)
-	cd ThirdParty/JUCE && git checkout master && cd ../..
 	cd $(ANDROID_APP_DIR) && ./gradlew build
 
 .stamp-aap: dummy-aap-dir
