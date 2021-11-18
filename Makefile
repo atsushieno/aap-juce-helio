@@ -9,7 +9,7 @@ all: build
 build: prepare build-aap-core build-helio
 
 prepare:
-	cd external/helio-workstation/ThirdParty/JUCE && git fetch origin master && git checkout 6.0.8
+	cd external/helio-workstation/ThirdParty/JUCE && git remote set-url original https://github.com/juce-framework/JUCE.git && git fetch original master && git checkout 6.0.8
 
 build-aap-core:
 	cd $(AAP_DIR) && make
