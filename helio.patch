@@ -1,13 +1,13 @@
 diff --git a/Projects/Android/app/CMakeLists.txt b/Projects/Android/app/CMakeLists.txt
-index 75c470a9..3e870e42 100644
+index 480ad211..b32e99cb 100644
 --- a/Projects/Android/app/CMakeLists.txt
 +++ b/Projects/Android/app/CMakeLists.txt
 @@ -8,7 +8,7 @@ set(BINARY_NAME "juce_jni")
  add_library("cpufeatures" STATIC "${ANDROID_NDK}/sources/android/cpufeatures/cpu-features.c")
  set_source_files_properties("${ANDROID_NDK}/sources/android/cpufeatures/cpu-features.c" PROPERTIES COMPILE_FLAGS "-Wno-sign-conversion -Wno-gnu-statement-expression")
  
--add_definitions("-DJUCE_ANDROID=1" "-DJUCE_ANDROID_API_VERSION=21" "-DJUCE_ANDROID_GL_ES_VERSION_3_0=1" "-DJUCER_ANDROIDSTUDIO_6AB8437A=1" "-DJUCE_APP_VERSION=3.7" "-DJUCE_APP_VERSION_HEX=0x30700")
-+add_definitions("-DJUCE_ANDROID=1" "-DJUCE_ANDROID_API_VERSION=29" "-DJUCE_ANDROID_GL_ES_VERSION_3_0=1" "-DJUCER_ANDROIDSTUDIO_6AB8437A=1" "-DJUCE_APP_VERSION=3.7" "-DJUCE_APP_VERSION_HEX=0x30700" "-DJUCE_PLUGINHOST_VST=0")
+-add_definitions("-DJUCE_ANDROID=1" "-DJUCE_ANDROID_API_VERSION=21" "-DJUCE_ANDROID_GL_ES_VERSION_3_0=1" "-DJUCER_ANDROIDSTUDIO_6AB8437A=1" "-DJUCE_APP_VERSION=3.8" "-DJUCE_APP_VERSION_HEX=0x30800")
++add_definitions("-DJUCE_ANDROID=1" "-DJUCE_ANDROID_API_VERSION=21" "-DJUCE_ANDROID_GL_ES_VERSION_3_0=1" "-DJUCER_ANDROIDSTUDIO_6AB8437A=1" "-DJUCE_APP_VERSION=3.8" "-DJUCE_APP_VERSION_HEX=0x30800" "-DJUCE_PLUGINHOST_VST=0")
  
  include_directories( AFTER
      "../../../ThirdParty/JUCE/modules/juce_audio_processors/format_types/VST3_SDK"
@@ -55,7 +55,7 @@ index 75c470a9..3e870e42 100644
 +    androidaudioplugin
  )
 diff --git a/Projects/Android/app/build.gradle b/Projects/Android/app/build.gradle
-index cb8e135a..d165ac9e 100644
+index cd1afcaf..b26053be 100644
 --- a/Projects/Android/app/build.gradle
 +++ b/Projects/Android/app/build.gradle
 @@ -1,29 +1,20 @@
@@ -106,6 +106,15 @@ index cb8e135a..d165ac9e 100644
           }
      }
  
+@@ -47,7 +36,7 @@ android {
+     productFlavors {
+         debug_ {
+             ndk {
+-                abiFilters "armeabi-v7a", "arm64-v8a"
++                abiFilters "armeabi-v7a", "arm64-v8a", "x86", "x86_64"
+             }
+             externalNativeBuild {
+                 cmake {
 @@ -102,3 +91,7 @@ ndkVersion "21.3.6528147"
  
  }
@@ -115,38 +124,35 @@ index cb8e135a..d165ac9e 100644
 +}
 +
 diff --git a/Projects/Android/app/src/main/AndroidManifest.xml b/Projects/Android/app/src/main/AndroidManifest.xml
-index 08bd954d..cbc9cefa 100644
+index 662c1583..b01ed0c1 100644
 --- a/Projects/Android/app/src/main/AndroidManifest.xml
 +++ b/Projects/Android/app/src/main/AndroidManifest.xml
-@@ -2,19 +2,25 @@
+@@ -2,6 +2,11 @@
  
- <manifest xmlns:android="http://schemas.android.com/apk/res/android" android:versionCode="37" android:versionName="3.7"
+ <manifest xmlns:android="http://schemas.android.com/apk/res/android" android:versionCode="38" android:versionName="3.8"
            package="fm.helio">
 +  <queries>
 +    <intent>
 +      <action android:name="org.androidaudioplugin.AudioPluginService" />
 +    </intent>
 +  </queries>
-+
    <supports-screens android:smallScreens="true" android:normalScreens="true" android:largeScreens="true" android:anyDensity="true"
                      android:xlargeScreens="true"/>
    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
-   <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
--  <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
--  <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
-+  <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
-   <uses-permission android:name="android.permission.BLUETOOTH"/>
-   <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"/>
-   <uses-feature android:glEsVersion="0x00030000" android:required="true"/>
-   <application android:label="@string/app_name" android:name="com.rmsl.juce.JuceApp" android:theme="@android:style/Theme.Black.NoTitleBar.Fullscreen"
+@@ -14,11 +19,12 @@
+   <application android:label="@string/app_name" android:name="com.rmsl.juce.JuceApp" android:theme="@android:style/Theme.Material.NoActionBar.Fullscreen"
                 android:icon="@drawable/icon" android:hardwareAccelerated="false">
-+    <provider android:authorities="org.androidaudioplugin.AudioPluginNativeHostContentProvider.Helio" android:name="org.androidaudioplugin.AudioPluginNativeHostContentProvider"/>
      <activity android:name="android.app.Activity" android:label="@string/app_name" android:configChanges="keyboardHidden|orientation|screenSize"
 -              android:screenOrientation="userLandscape" android:launchMode="singleTask" android:hardwareAccelerated="true">
 +              android:screenOrientation="userLandscape" android:launchMode="singleTask" android:hardwareAccelerated="true" android:exported="true">
        <intent-filter>
          <action android:name="android.intent.action.MAIN"/>
          <category android:name="android.intent.category.LAUNCHER"/>
+       </intent-filter>
+     </activity>
++    <provider android:authorities="org.androidaudioplugin.AudioPluginNativeHostContentProvider.Helio" android:name="org.androidaudioplugin.AudioPluginNativeHostContentProvider"/>
+   </application>
+ </manifest>
 diff --git a/Projects/Android/build.gradle b/Projects/Android/build.gradle
 index 0fe5b4aa..688e0e22 100644
 --- a/Projects/Android/build.gradle
@@ -186,7 +192,7 @@ index 49479605..a77d7737 100644
 +zipStoreBase=GRADLE_USER_HOME
 +
 diff --git a/Source/Core/Audio/AudioCore.cpp b/Source/Core/Audio/AudioCore.cpp
-index 7b0ac938..bc464c45 100644
+index f8232d41..0553779e 100644
 --- a/Source/Core/Audio/AudioCore.cpp
 +++ b/Source/Core/Audio/AudioCore.cpp
 @@ -23,11 +23,16 @@
@@ -349,10 +355,10 @@ index baea62a8..e6710aa3 100644
              child->setMouseClickGrabsKeyboardFocus(false);
          }
 diff --git a/Source/UI/Pages/Dashboard/Dashboard.cpp b/Source/UI/Pages/Dashboard/Dashboard.cpp
-index f8778f6f..272bf7bd 100644
+index 0f1d1be4..a790647e 100644
 --- a/Source/UI/Pages/Dashboard/Dashboard.cpp
 +++ b/Source/UI/Pages/Dashboard/Dashboard.cpp
-@@ -32,7 +32,7 @@
+@@ -30,7 +30,7 @@
  
  Dashboard::Dashboard(Workspace &workspace) : workspace(workspace)
  {
@@ -375,7 +381,7 @@ index b9bb1a35..ee5da440 100644
      this->listBox = make<ListBox>();
      this->addAndMakeVisible(this->listBox.get());
 diff --git a/Source/UI/Pages/Instruments/AudioPluginsListComponent.cpp b/Source/UI/Pages/Instruments/AudioPluginsListComponent.cpp
-index d1545ca2..7b2ac2ab 100644
+index 7ebe19e3..3827b8a2 100644
 --- a/Source/UI/Pages/Instruments/AudioPluginsListComponent.cpp
 +++ b/Source/UI/Pages/Instruments/AudioPluginsListComponent.cpp
 @@ -31,7 +31,7 @@ AudioPluginsListComponent::AudioPluginsListComponent(PluginScanner &pluginScanne
@@ -414,10 +420,10 @@ index 5411c00d..2bdd098a 100644
  
  InstrumentEditor::~InstrumentEditor()
 diff --git a/Source/UI/Pages/Instruments/Editor/KeyboardMappingPage.cpp b/Source/UI/Pages/Instruments/Editor/KeyboardMappingPage.cpp
-index d8a8379b..0914ed93 100644
+index 3cbc27e4..376d5c7f 100644
 --- a/Source/UI/Pages/Instruments/Editor/KeyboardMappingPage.cpp
 +++ b/Source/UI/Pages/Instruments/Editor/KeyboardMappingPage.cpp
-@@ -29,7 +29,7 @@
+@@ -30,7 +30,7 @@
  KeyboardMappingPage::KeyboardMappingPage(WeakReference<Instrument> instrument) :
      instrument(instrument)
  {
@@ -440,10 +446,10 @@ index f95f8e8b..354ebd12 100644
      this->setInterceptsMouseClicks(false, true);
      this->setPaintingIsUnclipped(true);
 diff --git a/Source/UI/Pages/Instruments/OrchestraPitPage.cpp b/Source/UI/Pages/Instruments/OrchestraPitPage.cpp
-index 3fa575b5..9ccad823 100644
+index 8bdfa9a4..5c37debb 100644
 --- a/Source/UI/Pages/Instruments/OrchestraPitPage.cpp
 +++ b/Source/UI/Pages/Instruments/OrchestraPitPage.cpp
-@@ -31,7 +31,7 @@ OrchestraPitPage::OrchestraPitPage(PluginScanner &pluginScanner, OrchestraPitNod
+@@ -32,7 +32,7 @@ OrchestraPitPage::OrchestraPitPage(PluginScanner &pluginScanner, OrchestraPitNod
  {
      this->setComponentID(ComponentIDs::orchestraPit);
  
@@ -453,7 +459,7 @@ index 3fa575b5..9ccad823 100644
      this->setInterceptsMouseClicks(false, true);
      this->setPaintingIsUnclipped(true);
 diff --git a/Source/UI/Pages/Project/ProjectPage.cpp b/Source/UI/Pages/Project/ProjectPage.cpp
-index 690f72a1..2e0a6945 100644
+index dfa8499f..06c00e5b 100644
 --- a/Source/UI/Pages/Project/ProjectPage.cpp
 +++ b/Source/UI/Pages/Project/ProjectPage.cpp
 @@ -43,7 +43,8 @@ static String getTimeString(const RelativeTime &time)
@@ -611,7 +617,7 @@ index dc3c988a..086eabfa 100644
      this->setInterceptsMouseClicks(false, true);
      this->enterModalState(false, nullptr, true);
 diff --git a/Source/UI/Sequencer/Header/RollHeader.cpp b/Source/UI/Sequencer/Header/RollHeader.cpp
-index 0781a88c..edc0aa80 100644
+index b7de079a..66143734 100644
 --- a/Source/UI/Sequencer/Header/RollHeader.cpp
 +++ b/Source/UI/Sequencer/Header/RollHeader.cpp
 @@ -164,7 +164,7 @@ RollHeader::RollHeader(Transport &transport, RollBase &roll, Viewport &viewport)
@@ -663,7 +669,7 @@ index 143697c6..2d4436d9 100644
      this->setMouseCursor(MouseCursor::UpDownResizeCursor);
  
 diff --git a/Source/UI/Sequencer/RollBase.cpp b/Source/UI/Sequencer/RollBase.cpp
-index c7f0d19e..169fdb93 100644
+index cd365c7f..d9321997 100644
 --- a/Source/UI/Sequencer/RollBase.cpp
 +++ b/Source/UI/Sequencer/RollBase.cpp
 @@ -90,7 +90,7 @@ RollBase::RollBase(ProjectNode &parentProject, Viewport &viewportRef,
@@ -685,10 +691,10 @@ index c7f0d19e..169fdb93 100644
      this->addAndMakeVisible(this->header.get());
      this->addAndMakeVisible(this->headerShadow.get());
 diff --git a/Source/UI/Sequencer/SequencerLayout.cpp b/Source/UI/Sequencer/SequencerLayout.cpp
-index 18ec6546..79450b3a 100644
+index c21bdbfc..ac493ece 100644
 --- a/Source/UI/Sequencer/SequencerLayout.cpp
 +++ b/Source/UI/Sequencer/SequencerLayout.cpp
-@@ -437,7 +437,7 @@ SequencerLayout::SequencerLayout(ProjectNode &parentProject) :
+@@ -454,7 +454,7 @@ SequencerLayout::SequencerLayout(ProjectNode &parentProject) :
      this->pianoViewport->setInterceptsMouseClicks(false, true);
      this->pianoViewport->setScrollBarsShown(false, false);
      this->pianoViewport->setWantsKeyboardFocus(false);
@@ -697,7 +703,7 @@ index 18ec6546..79450b3a 100644
      this->pianoViewport->setPaintingIsUnclipped(true);
      
      this->pianoRoll = make<PianoRoll>(this->project,
-@@ -448,7 +448,7 @@ SequencerLayout::SequencerLayout(ProjectNode &parentProject) :
+@@ -465,7 +465,7 @@ SequencerLayout::SequencerLayout(ProjectNode &parentProject) :
      this->patternViewport->setInterceptsMouseClicks(false, true);
      this->patternViewport->setScrollBarsShown(false, false);
      this->patternViewport->setWantsKeyboardFocus(false);
@@ -706,10 +712,3 @@ index 18ec6546..79450b3a 100644
      this->patternViewport->setPaintingIsUnclipped(true);
  
      this->patternRoll = make<PatternRoll>(this->project,
-diff --git a/ThirdParty/JUCE b/ThirdParty/JUCE
-index c188db98..90e8da0c 160000
---- a/ThirdParty/JUCE
-+++ b/ThirdParty/JUCE
-@@ -1 +1 @@
--Subproject commit c188db98000ef02773e72a87343251e7ddc01ac2
-+Subproject commit 90e8da0cfb54ac593cdbed74c3d0c9b09bad3a9f
