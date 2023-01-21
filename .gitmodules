@@ -2,7 +2,7 @@
 	path = external/aap-juce
 	url = https://github.com/atsushieno/aap-juce.git
 [submodule "external/android-audio-plugin-framework"]
-	path = external/android-audio-plugin-framework
+	path = external/aap-core
 	url = https://github.com/atsushieno/android-audio-plugin-framework.git
 [submodule "external/helio-workstation"]
 	path = external/helio-workstation

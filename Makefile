@@ -1,6 +1,6 @@
 
 PWD=$(shell pwd)
-AAP_DIR=$(shell pwd)/external/android-audio-plugin-framework
+AAP_DIR=$(shell pwd)/external/aap-core
 APP_TOPDIR=external/helio-workstation
 ANDROID_APP_DIR=external/helio-workstation/Projects/Android
 JUCE_ORIGINAL=https://github.com/juce-framework/JUCE.git
@@ -16,16 +16,10 @@ prepare:
 build-aap-core:
 	cd $(AAP_DIR) && make
 
-build-helio: .stamp-aap patch-helio
+build-helio: patch-helio
 	cd external/helio-workstation/ThirdParty/JUCE && git checkout master && cd ../../../..
 	cp gradle.properties $(ANDROID_APP_DIR)
 	cd $(ANDROID_APP_DIR) && ./gradlew build
-
-.stamp-aap: dummy-aap-dir
-	touch .stamp-aap
-
-dummy-aap-dir:
-	unzip $(AAP_DIR)/java/androidaudioplugin/build/outputs/aar/androidaudioplugin-debug.aar -d dummy-aap-dir
 
 patch-helio: .stamp-helio
 

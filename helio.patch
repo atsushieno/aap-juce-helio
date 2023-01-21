@@ -15,8 +15,8 @@ index 480ad211..b32e99cb 100644
          "../../../Source/UI/Sequencer/PianoRoll"
          "../../../Source/UI/Sequencer/Sidebars"
          "../../../Source/UI/Themes"
-+	"../../../../android-audio-plugin-framework/native/plugin-api/include"
-+	"../../../../android-audio-plugin-framework/native/androidaudioplugin/core/include"
++	"../../../../aap-core/include"
++	"../../../../aap-core/include"
      )
  
  elseif(JUCE_BUILD_CONFIGURATION MATCHES "RELEASE")
@@ -24,8 +24,8 @@ index 480ad211..b32e99cb 100644
          "../../../Source/UI/Sequencer/PianoRoll"
          "../../../Source/UI/Sequencer/Sidebars"
          "../../../Source/UI/Themes"
-+	"../../../../android-audio-plugin-framework/native/plugin-api/include"
-+	"../../../../android-audio-plugin-framework/native/androidaudioplugin/core/include"
++	"../../../../aap-core/include"
++	"../../../../aap-core/include"
      )
  
  else()
@@ -63,7 +63,7 @@ index cd1afcaf..b26053be 100644
  
  android {
 -    compileSdkVersion 28
-+    compileSdkVersion 31
++    compileSdkVersion 33
      externalNativeBuild {
          cmake {
              path "CMakeLists.txt"
@@ -84,11 +84,11 @@ index cd1afcaf..b26053be 100644
 -        minSdkVersion    21
 -        targetSdkVersion 28
 +        minSdkVersion    29
-+        targetSdkVersion 31
++        targetSdkVersion 33
          externalNativeBuild {
              cmake {
 -                arguments "-DANDROID_TOOLCHAIN=clang", "-DANDROID_PLATFORM=android-21", "-DANDROID_STL=c++_static", "-DANDROID_CPP_FEATURES=exceptions rtti", "-DANDROID_ARM_MODE=arm", "-DANDROID_ARM_NEON=TRUE", "-DCMAKE_CXX_STANDARD=14", "-DCMAKE_CXX_EXTENSIONS=OFF"
-+                arguments "-DANDROID_TOOLCHAIN=clang", "-DANDROID_PLATFORM=android-29", "-DANDROID_STL=c++_static", "-DANDROID_CPP_FEATURES=exceptions rtti", "-DANDROID_ARM_MODE=arm", "-DANDROID_ARM_NEON=TRUE", "-DCMAKE_CXX_STANDARD=14", "-DCMAKE_CXX_EXTENSIONS=OFF"
++                arguments "-DANDROID_TOOLCHAIN=clang", "-DANDROID_PLATFORM=android-29", "-DANDROID_STL=c++_shared", "-DANDROID_CPP_FEATURES=exceptions rtti", "-DANDROID_ARM_MODE=arm", "-DANDROID_ARM_NEON=TRUE", "-DCMAKE_CXX_STANDARD=17", "-DCMAKE_CXX_EXTENSIONS=OFF"
              }
          }
      }
@@ -120,7 +120,7 @@ index cd1afcaf..b26053be 100644
  }
  
 +dependencies {
-+    implementation 'org.androidaudioplugin:androidaudioplugin:0.6.20'
++    implementation 'org.androidaudioplugin:androidaudioplugin:0.7.5-pre'
 +}
 +
 diff --git a/Projects/Android/app/src/main/AndroidManifest.xml b/Projects/Android/app/src/main/AndroidManifest.xml
@@ -133,7 +133,7 @@ index 662c1583..12845c6a 100644
            package="fm.helio">
 +  <queries>
 +    <intent>
-+      <action android:name="org.androidaudioplugin.AudioPluginService" />
++      <action android:name="org.androidaudioplugin.AudioPluginService.V2" />
 +    </intent>
 +  </queries>
    <supports-screens android:smallScreens="true" android:normalScreens="true" android:largeScreens="true" android:anyDensity="true"
@@ -171,7 +171,7 @@ index 0fe5b4aa..688e0e22 100644
     }
     dependencies {
 -       classpath 'com.android.tools.build:gradle:4.0.0'
-+       classpath 'com.android.tools.build:gradle:7.2.0-alpha04'
++       classpath 'com.android.tools.build:gradle:7.3.1'
     }
  }
  
@@ -191,7 +191,7 @@ index 49479605..a77d7737 100644
 -distributionUrl=https\://services.gradle.org/distributions/gradle-6.1.1-all.zip
 \ No newline at end of file
 +distributionBase=GRADLE_USER_HOME
-+distributionUrl=https\://services.gradle.org/distributions/gradle-7.3-rc-1-bin.zip
++distributionUrl=https\://services.gradle.org/distributions/gradle-7.6-bin.zip
 +distributionPath=wrapper/dists
 +zipStorePath=wrapper/dists
 +zipStoreBase=GRADLE_USER_HOME
