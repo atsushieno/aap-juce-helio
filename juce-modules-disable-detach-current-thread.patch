@@ -1,0 +1,43 @@
+diff --git a/modules/juce_core/native/juce_android_Threads.cpp b/modules/juce_core/native/juce_android_Threads.cpp
+index f9ba13b0a..5bfadcefb 100644
+--- a/modules/juce_core/native/juce_android_Threads.cpp
++++ b/modules/juce_core/native/juce_android_Threads.cpp
+@@ -44,7 +44,19 @@ JNIEnv* getEnv() noexcept
+     if (androidJNIJavaVM != nullptr)
+     {
+         JNIEnv* env;
+-        androidJNIJavaVM->AttachCurrentThread (&env, nullptr);
++        // LAMESPEC: JUCE original always try to "attach" current thread, regardless of whether
++        // it is launched from java.lang.Thread or not. The problem is that they always call
++        // DetachCurrentThread() which causes runtime crash. It should be called only if the
++        // JNIEnv* is manually attached.
++        //
++        // So far, there is no place we save the flag whether the current thread has attached
++        // JNIEnv* or not. We just disable DetachCurrentThread() in juce_posix_SharedCode.h and
++        // leave Java resources as is. Since every thread after establishing our thread creator
++        // every thread should be created via java.lang.Thread, there is not likely any leaky
++        // threads other than the main thread, which can leak IIUC.
++        androidJNIJavaVM->GetEnv((void**) &env, JNI_VERSION_1_2);
++        if (env == nullptr)
++            androidJNIJavaVM->AttachCurrentThread (&env, nullptr);
+ 
+         return env;
+     }
+diff --git a/modules/juce_core/native/juce_posix_SharedCode.h b/modules/juce_core/native/juce_posix_SharedCode.h
+index dbf06043a..170ff867a 100644
+--- a/modules/juce_core/native/juce_posix_SharedCode.h
++++ b/modules/juce_core/native/juce_posix_SharedCode.h
+@@ -865,9 +865,10 @@ static void* threadEntryProc (void* userData)
+         void* env = nullptr;
+         androidJNIJavaVM->GetEnv(&env, JNI_VERSION_1_2);
+ 
+-        // only detach if we have actually been attached
+-        if (env != nullptr)
+-            androidJNIJavaVM->DetachCurrentThread();
++        // LAMESPACE: disabled: see the code comment on getEnv() for details.
++        //// only detach if we have actually been attached
++        //if (env != nullptr)
++        //    androidJNIJavaVM->DetachCurrentThread();
+     }
+    #endif
+ 

@@ -285,3 +285,249 @@ index 13c3bb38..0a7cbf98 100644
  }
  
  AudioCore::AudioCore()
+diff --git a/Source/Core/Audio/Instruments/Instrument.cpp b/Source/Core/Audio/Instruments/Instrument.cpp
+index 67857345..2abbef13 100644
+--- a/Source/Core/Audio/Instruments/Instrument.cpp
++++ b/Source/Core/Audio/Instruments/Instrument.cpp
+@@ -821,9 +821,12 @@ void Instrument::AudioCallback::setProcessor(AudioProcessor *const newOne)
+     }
+ }
+ 
+-void Instrument::AudioCallback::audioDeviceIOCallback(const float** const inputChannelData,
+-    const int numInputChannels, float **const outputChannelData,
+-    const int numOutputChannels, const int numSamples)
++void Instrument::AudioCallback::audioDeviceIOCallbackWithContext(const float* const* inputChannelData,
++                                                      int numInputChannels,
++                                                      float* const* outputChannelData,
++                                                      int numOutputChannels,
++                                                      int numSamples,
++                                                      const AudioIODeviceCallbackContext& context)
+ {
+     jassert(this->sampleRate > 0 && this->blockSize > 0);
+ 
+diff --git a/Source/Core/Audio/Instruments/Instrument.h b/Source/Core/Audio/Instruments/Instrument.h
+index 9f3c4efd..6319cb9a 100644
+--- a/Source/Core/Audio/Instruments/Instrument.h
++++ b/Source/Core/Audio/Instruments/Instrument.h
+@@ -52,7 +52,7 @@ public:
+         void setProcessor(AudioProcessor *processor);
+         MidiMessageCollector &getMidiMessageCollector() noexcept { return messageCollector; }
+ 
+-        void audioDeviceIOCallback(const float **, int, float **, int, int) override;
++        void audioDeviceIOCallbackWithContext(const float* const*, int, float* const*, int, int, const AudioIODeviceCallbackContext&) override;
+         void audioDeviceAboutToStart(AudioIODevice *) override;
+         void audioDeviceStopped() override;
+         void handleIncomingMidiMessage(MidiInput *, const MidiMessage&) override;
+diff --git a/Source/Core/Audio/Instruments/PluginScanner.cpp b/Source/Core/Audio/Instruments/PluginScanner.cpp
+index 062e9d8e..4770c0b7 100644
+--- a/Source/Core/Audio/Instruments/PluginScanner.cpp
++++ b/Source/Core/Audio/Instruments/PluginScanner.cpp
+@@ -110,7 +110,7 @@ void PluginScanner::runInitialScan()
+ 
+     if (!this->isThreadRunning())
+     {
+-        this->startThread(0);
++        this->startThread(Thread::Priority::normal);
+     }
+ 
+     // prepare search paths, prepare specific files to scan,
+@@ -159,7 +159,7 @@ void PluginScanner::scanFolderAndAddResults(const File &dir)
+ 
+     if (!this->isThreadRunning())
+     {
+-        this->startThread(0);
++        this->startThread(Thread::Priority::normal);
+     }
+ 
+     // prepare search paths and resume search thread
+diff --git a/Source/Core/Audio/Monitoring/AudioMonitor.cpp b/Source/Core/Audio/Monitoring/AudioMonitor.cpp
+index 0b059554..f1cf532c 100644
+--- a/Source/Core/Audio/Monitoring/AudioMonitor.cpp
++++ b/Source/Core/Audio/Monitoring/AudioMonitor.cpp
+@@ -74,8 +74,12 @@ void AudioMonitor::audioDeviceAboutToStart(AudioIODevice *device)
+     this->sampleRate = device->getCurrentSampleRate();
+ }
+ 
+-void AudioMonitor::audioDeviceIOCallback(const float **inputChannelData, int numInputChannels,
+-    float **outputChannelData, int numOutputChannels, int numSamples)
++void AudioMonitor::audioDeviceIOCallbackWithContext(const float* const* inputChannelData,
++                                         int numInputChannels,
++                                         float* const* outputChannelData,
++                                         int numOutputChannels,
++                                         int numSamples,
++                                         const AudioIODeviceCallbackContext& context)
+ {
+     const int minNumChannels = jmin(AudioMonitor::numChannels, numOutputChannels);
+     
+diff --git a/Source/Core/Audio/Monitoring/AudioMonitor.h b/Source/Core/Audio/Monitoring/AudioMonitor.h
+index c696a564..f5fc79ed 100644
+--- a/Source/Core/Audio/Monitoring/AudioMonitor.h
++++ b/Source/Core/Audio/Monitoring/AudioMonitor.h
+@@ -30,8 +30,12 @@ public:
+     //===------------------------------------------------------------------===//
+ 
+     void audioDeviceAboutToStart(AudioIODevice *device) override;
+-    void audioDeviceIOCallback(const float **inputChannelData, int numInputChannels,
+-        float **outputChannelData, int numOutputChannels, int numSamples) override;
++    void audioDeviceIOCallbackWithContext(const float* const* inputChannelData,
++                                          int numInputChannels,
++                                          float* const* outputChannelData,
++                                          int numOutputChannels,
++                                          int numSamples,
++                                          const AudioIODeviceCallbackContext& context) override;
+     void audioDeviceStopped() override {}
+     
+     //===------------------------------------------------------------------===//
+diff --git a/Source/Core/Audio/Transport/PlayerThread.cpp b/Source/Core/Audio/Transport/PlayerThread.cpp
+index 5d3e6a7b..511c6f27 100644
+--- a/Source/Core/Audio/Transport/PlayerThread.cpp
++++ b/Source/Core/Audio/Transport/PlayerThread.cpp
+@@ -36,7 +36,7 @@ void PlayerThread::startPlayback(Transport::PlaybackContext::Ptr context)
+ {
+     this->context = context;
+     this->sequences = this->transport.getPlaybackCache();
+-    this->startThread(10);
++    this->startThread(Thread::Priority::highest);
+ }
+ 
+ void PlayerThread::run()
+diff --git a/Source/Core/Audio/Transport/RendererThread.cpp b/Source/Core/Audio/Transport/RendererThread.cpp
+index 4f61d4db..7b22313f 100644
+--- a/Source/Core/Audio/Transport/RendererThread.cpp
++++ b/Source/Core/Audio/Transport/RendererThread.cpp
+@@ -86,7 +86,7 @@ bool RendererThread::startRendering(const URL &target, RenderFormat format,
+         if (writer != nullptr)
+         {
+             DBG(this->renderTarget.getLocalFile().getFullPathName());
+-            this->startThread(9);
++            this->startThread(Thread::Priority::highest);
+         }
+ 
+         return true;
+diff --git a/Source/Core/VCS/Head.cpp b/Source/Core/VCS/Head.cpp
+index 3bbed38b..c5055090 100644
+--- a/Source/Core/VCS/Head.cpp
++++ b/Source/Core/VCS/Head.cpp
+@@ -418,7 +418,7 @@ void Head::rebuildDiffIfNeeded()
+ {
+     if (this->isDiffOutdated() && !this->isThreadRunning())
+     {
+-        this->startThread(5);
++        this->startThread(Thread::Priority::high);
+     }
+ }
+ 
+@@ -431,7 +431,7 @@ void Head::rebuildDiffNow()
+         this->stopThread(Head::diffRebuildThreadStopTimeoutMs);
+     }
+ 
+-    this->startThread(9);
++    this->startThread(Thread::Priority::high);
+ }
+ 
+ 
+diff --git a/Source/UI/Common/AudioMonitors/SpectrogramAudioMonitorComponent.cpp b/Source/UI/Common/AudioMonitors/SpectrogramAudioMonitorComponent.cpp
+index 0130c0c8..3ac51c28 100644
+--- a/Source/UI/Common/AudioMonitors/SpectrogramAudioMonitorComponent.cpp
++++ b/Source/UI/Common/AudioMonitors/SpectrogramAudioMonitorComponent.cpp
+@@ -50,7 +50,7 @@ SpectrogramAudioMonitorComponent::SpectrogramAudioMonitorComponent(WeakReference
+ 
+     if (this->audioMonitor != nullptr)
+     {
+-        this->startThread(5);
++        this->startThread(Thread::Priority::high);
+     }
+ }
+ 
+@@ -59,7 +59,7 @@ void SpectrogramAudioMonitorComponent::setTargetAnalyzer(WeakReference<AudioMoni
+     if (monitor != nullptr)
+     {
+         this->audioMonitor = monitor;
+-        this->startThread(5);
++        this->startThread(Thread::Priority::high);
+     }
+ }
+ 
+diff --git a/Source/UI/Common/AudioMonitors/WaveformAudioMonitorComponent.cpp b/Source/UI/Common/AudioMonitors/WaveformAudioMonitorComponent.cpp
+index 59a39a0a..2bf8b527 100644
+--- a/Source/UI/Common/AudioMonitors/WaveformAudioMonitorComponent.cpp
++++ b/Source/UI/Common/AudioMonitors/WaveformAudioMonitorComponent.cpp
+@@ -31,7 +31,7 @@ WaveformAudioMonitorComponent::WaveformAudioMonitorComponent(WeakReference<Audio
+ 
+     if (this->audioMonitor != nullptr)
+     {
+-        this->startThread(6);
++        this->startThread(Thread::Priority::high);
+     }
+ }
+ 
+@@ -45,7 +45,7 @@ void WaveformAudioMonitorComponent::setTargetAnalyzer(WeakReference<AudioMonitor
+     if (targetAnalyzer != nullptr)
+     {
+         this->audioMonitor = targetAnalyzer;
+-        this->startThread(6);
++        this->startThread(Thread::Priority::high);
+     }
+ }
+ 
+diff --git a/Source/UI/Common/MetronomeEditor.h b/Source/UI/Common/MetronomeEditor.h
+index 79f8b004..30c20c50 100644
+--- a/Source/UI/Common/MetronomeEditor.h
++++ b/Source/UI/Common/MetronomeEditor.h
+@@ -184,7 +184,7 @@ public:
+             this->metronomePreviewThread = make<MetronomePreviewThread>(this->transport,
+                 this->metronome, this->metronomeInstrument);
+ 
+-            this->metronomePreviewThread->startThread(5);
++            this->metronomePreviewThread->startThread(Thread::Priority::highest);
+             this->playButton->setPlaying(true);
+         }
+         else if (commandId == CommandIDs::TransportStop)
+diff --git a/Source/UI/Common/SpectralLogo.cpp b/Source/UI/Common/SpectralLogo.cpp
+index a5b41d9b..8e191e95 100644
+--- a/Source/UI/Common/SpectralLogo.cpp
++++ b/Source/UI/Common/SpectralLogo.cpp
+@@ -26,8 +26,8 @@ SpectralLogo::SpectralLogo() : Thread("Logo Animation")
+     {
+         this->bands.add(new SpectralLogo::Band(this));
+     }
+-    
+-    this->startThread(5);
++
++    this->startThread(Thread::Priority::high);
+ }
+ 
+ SpectralLogo::~SpectralLogo()
+diff --git a/Source/UI/Dialogs/KeySignatureDialog.cpp b/Source/UI/Dialogs/KeySignatureDialog.cpp
+index f433cef1..211dd08c 100644
+--- a/Source/UI/Dialogs/KeySignatureDialog.cpp
++++ b/Source/UI/Dialogs/KeySignatureDialog.cpp
+@@ -283,7 +283,7 @@ void KeySignatureDialog::handleCommandMessage(int commandId)
+         }
+ 
+         this->scalePreviewThread = make<ScalePreviewThread>(this->transport, move(scaleKeys));
+-        this->scalePreviewThread->startThread(5);
++        this->scalePreviewThread->startThread(Thread::Priority::high);
+ 
+         this->playButton->setPlaying(true);
+     }
+diff --git a/Source/UI/Input/SmoothZoomController.h b/Source/UI/Input/SmoothZoomController.h
+index 087794d4..94b82af3 100644
+--- a/Source/UI/Input/SmoothZoomController.h
++++ b/Source/UI/Input/SmoothZoomController.h
+@@ -30,7 +30,7 @@ public:
+         Thread("SmoothZoom"),
+         listener(parent)
+     {
+-        this->startThread(9);
++        this->startThread(Thread::Priority::highest);
+     }
+ 
+     ~SmoothZoomController() override
+diff --git a/ThirdParty/JUCE b/ThirdParty/JUCE
+index ad8ce3b1..e49fb38d 160000
+--- a/ThirdParty/JUCE
++++ b/ThirdParty/JUCE
+@@ -1 +1 @@
+-Subproject commit ad8ce3b1e60d81fc10b5366d704dba045bdddf3a
++Subproject commit e49fb38d44622435f39f486530e84f84df20c8af
