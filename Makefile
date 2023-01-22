@@ -20,7 +20,6 @@ build-aap-core:
 	cd $(AAP_DIR) && ./gradlew build publishToMavenLocal
 
 build-helio: patch-helio
-	cd external/helio-workstation/ThirdParty/JUCE && git checkout master && cd ../../../..
 	cp gradle.properties $(ANDROID_APP_DIR)
 	cd $(ANDROID_APP_DIR) && ./gradlew build
 
