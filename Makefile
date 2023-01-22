@@ -9,8 +9,9 @@ JUCE_ORIGINAL=https://github.com/juce-framework/JUCE.git
 
 all: build
 
-build: prepare build-aap-core build-helio
+build: build-aap-core build-helio
 
+# it is disabled now that helio-workstation submodules fairly recent JUCE.
 prepare:
 	cd external/helio-workstation/ThirdParty/JUCE && git remote add original $(JUCE_ORIGINAL) || exit 0
 	cd external/helio-workstation/ThirdParty/JUCE && git fetch original master && git checkout master
