@@ -56,7 +56,7 @@ index e9db491b..363d0a57 100644
 +    androidaudioplugin::androidaudioplugin
  )
 diff --git a/Projects/Android/app/build.gradle b/Projects/Android/app/build.gradle
-index cd1afcaf..be543ce9 100644
+index cd1afcaf..c8554ea6 100644
 --- a/Projects/Android/app/build.gradle
 +++ b/Projects/Android/app/build.gradle
 @@ -1,31 +1,24 @@
@@ -64,7 +64,7 @@ index cd1afcaf..be543ce9 100644
  
  android {
 -    compileSdkVersion 28
-+    namespace "fm.helio"
++    namespace "org.androidaudioplugin.ports.juce.helio"
 +    compileSdk = 33
      externalNativeBuild {
          cmake {
@@ -130,7 +130,17 @@ index cd1afcaf..be543ce9 100644
              externalNativeBuild {
                  cmake {
                      arguments "-DJUCE_BUILD_CONFIGURATION=RELEASE", "-DCMAKE_CXX_FLAGS_RELEASE=-O3", "-DCMAKE_C_FLAGS_RELEASE=-O3"
-@@ -96,9 +81,15 @@ android {
+@@ -86,7 +71,8 @@ android {
+     sourceSets {
+         main.java.srcDirs +=
+             ["../../../ThirdParty/JUCE/modules/juce_core/native/javacore/init",
+-             "../../../ThirdParty/JUCE/modules/juce_core/native/javacore/app"]
++             "../../../ThirdParty/JUCE/modules/juce_core/native/javacore/app",
++             "../../../../aap-juce/java"]
+ 
+         main.res.srcDirs +=
+             []
+@@ -96,9 +82,15 @@ android {
      }
  
      dependencies {
@@ -232,6 +242,19 @@ index 49479605..f26fd695 100644
 +distributionPath=wrapper/dists
 +zipStorePath=wrapper/dists
 +zipStoreBase=GRADLE_USER_HOME
+diff --git a/Projects/Projucer/Helio Workstation.jucer b/Projects/Projucer/Helio Workstation.jucer
+index 71da5f79..9d0d369b 100644
+--- a/Projects/Projucer/Helio Workstation.jucer	
++++ b/Projects/Projucer/Helio Workstation.jucer	
+@@ -1,7 +1,7 @@
+ <?xml version="1.0" encoding="UTF-8"?>
+ 
+ <JUCERPROJECT id="lG607P" name="Helio" projectType="guiapp" version="3.10"
+-              bundleIdentifier="fm.helio" includeBinaryInAppConfig="1" companyWebsite="https://helio.fm"
++              bundleIdentifier="org.androidaudioplugin.ports.juce.helio" includeBinaryInAppConfig="1" companyWebsite="https://github.com/atsushieno/aap-juce-helio"
+               companyEmail="peter.rudenko@gmail.com" companyName="Peter Rudenko"
+               displaySplashScreen="0" reportAppUsage="0" splashScreenColour="Dark"
+               cppLanguageStandard="14" usePrecompiledHeaders="0" precompiledHeaderFileName=""
 diff --git a/Projects/Projucer/JuceLibraryCode/AppConfig.h b/Projects/Projucer/JuceLibraryCode/AppConfig.h
 index 159c5b51..898d583f 100644
 --- a/Projects/Projucer/JuceLibraryCode/AppConfig.h
