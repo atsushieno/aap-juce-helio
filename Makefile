@@ -4,17 +4,12 @@ AAP_DIR=$(shell pwd)/external/aap-core
 APP_TOPDIR=external/helio-workstation
 ANDROID_APP_DIR=external/helio-workstation/Projects/Android
 JUCE_ORIGINAL=https://github.com/juce-framework/JUCE.git
-
-# TODO: apply juce-modules-*.patch files (they all matter)
+AAP_JUCE_DIR=$(shell pwd)/external/aap-juce
+JUCE_DIR=$(APP_TOPDIR)/ThirdParty/JUCE
 
 all: build
 
-build: build-aap-core build-helio
-
-# it is disabled now that helio-workstation submodules fairly recent JUCE.
-prepare:
-	cd external/helio-workstation/ThirdParty/JUCE && git remote add original $(JUCE_ORIGINAL) || exit 0
-	cd external/helio-workstation/ThirdParty/JUCE && git fetch original master && git checkout master
+build: build-aap-core patch-juce build-helio
 
 build-aap-core:
 	cd $(AAP_DIR) && ./gradlew build publishToMavenLocal
@@ -28,6 +23,15 @@ patch-helio: .stamp-helio
 .stamp-helio:
 	cd $(APP_TOPDIR) && patch -i $(PWD)/helio.patch -p1
 	touch .stamp-helio
+
+patch-juce: $(JUCE_DIR)/.stamp-juce
+
+$(JUCE_DIR)/.stamp-juce:
+	cd $(JUCE_DIR) ; \
+		patch -i $(AAP_JUCE_DIR)/JUCE-support-Android-thread-via-dalvik-juce6.patch -p1 ; \
+		patch -i $(AAP_JUCE_DIR)/JUCE-support-Android-kill-system-class-loader.patch -p1 ; \
+		patch -i $(AAP_JUCE_DIR)/JUCE-support-Android-disable-detach-current-thread-juce6.patch -p1 ; \
+	touch .stamp-juce
 
 dist:
 	mkdir -p release-builds
