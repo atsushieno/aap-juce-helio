@@ -1,6 +1,17 @@
-It is an experimental [aap-juce](https://github.com/atsushieno/aap-juce) port of [Helio Workstation](https://github.com/helio-fm/helio-workstation).
+## What is this?
 
-It seems to load AAPs on the plugin list, but not much further so far.
+It is an experimental [aap-juce](https://github.com/atsushieno/aap-juce) integration into [Helio Workstation](https://github.com/helio-fm/helio-workstation).
+
+Helio Workstation is a JUCE-based DAW, and aap-juce-helio adopts aap-juce hosting implementation. Most importantly, Helio Workstation supports Android to some extent, therefore the changes in this build is very trivial.
+
+Yet, JUCE itself has various bugs in Android Dalvik integration to get AAP working enough, and we still need handful of JUCE patches.
+
+
+## Current status:
+
+See helio-workstation on Android playing LV2 String Machine in action: https://imgur.com/a/Hh91JAI (audio quality is horrible yet)
+
+Some old screenshots from AAP 0.6.2:
 
 ![Plugin list](Screenshots/helio-android-plugins.png)
 ![Plugin routing](Screenshots/helio-android-plugin-routing.png)
@@ -9,5 +20,8 @@ It seems to load AAPs on the plugin list, but not much further so far.
 
 ## Licensing notice
 
-Helio Workstation is released under the GPLv3 license. There isn't really a lot of sources that can claim my copyright in this repo.
+Helio Workstation is released under the GPLv3 license.
 
+aap-juce is released under the GPLv3 license.
+
+There isn't really a lot of sources that can claim my copyright in this repo.
