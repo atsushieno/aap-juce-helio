@@ -11,11 +11,13 @@ Yet, JUCE itself has various bugs in Android Dalvik integration to get AAP worki
 
 See helio-workstation on Android playing LV2 String Machine in action: https://imgur.com/a/Hh91JAI (audio quality is horrible yet)
 
-Some old screenshots from AAP 0.6.2:
+Some highlight screenshots from AAP 0.7.5-pre:
 
-![Plugin list](Screenshots/helio-android-plugins.png)
-![Plugin routing](Screenshots/helio-android-plugin-routing.png)
-![Plugin parameter editor mode](Screenshots/helio-android-plugin-params.png)
+| subject | sshot |
+|-|-|
+| plugin listing | ![Plugin list](Screenshots/helio-android-plugins.png) |
+| plugin routing (String Machine) | ![Plugin routing](Screenshots/helio-android-plugin-routing.png) |
+| plugin parameters (Vitaloid, default GUI) | ![Plugin parameter editor mode](Screenshots/helio-android-plugin-params.png) |
 
 
 ## Licensing notice
