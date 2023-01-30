@@ -16,7 +16,7 @@ build-aap-core:
 
 build-helio: patch-helio
 	cp gradle.properties $(ANDROID_APP_DIR)
-	cd $(ANDROID_APP_DIR) && ./gradlew build
+	cd $(ANDROID_APP_DIR) && ./gradlew build bundle
 
 patch-helio: .stamp-helio
 
@@ -34,5 +34,6 @@ $(JUCE_DIR)/.stamp-juce:
 	touch .stamp-juce
 
 dist:
-	mkdir -p release-builds
-	cp ./external/helio-workstation/Projects/Android/app/build/outputs/apk/release_/release/*.apk release-builds
+	mkdir -p dist
+	cp ./external/helio-workstation/Projects/Android/app/build/outputs/apk/debug_/debug/*.apk dist/
+	cp ./external/helio-workstation/Projects/Android/app/build/outputs/bundle/release_Release/*.aab dist/
