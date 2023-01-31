@@ -56,7 +56,7 @@ index e9db491b..363d0a57 100644
 +    androidaudioplugin::androidaudioplugin
  )
 diff --git a/Projects/Android/app/build.gradle b/Projects/Android/app/build.gradle
-index cd1afcaf..c8554ea6 100644
+index cd1afcaf..e3210953 100644
 --- a/Projects/Android/app/build.gradle
 +++ b/Projects/Android/app/build.gradle
 @@ -1,31 +1,24 @@
@@ -82,9 +82,10 @@ index cd1afcaf..c8554ea6 100644
 -    }
  
      defaultConfig {
-         applicationId "fm.helio"
+-        applicationId "fm.helio"
 -        minSdkVersion    21
 -        targetSdkVersion 28
++        applicationId "org.androidaudioplugin.ports.juce.helio"
 +        minSdkVersion    29
 +        targetSdkVersion 33
          externalNativeBuild {
@@ -145,7 +146,7 @@ index cd1afcaf..c8554ea6 100644
  
      dependencies {
 +        implementation 'androidx.startup:startup-runtime:1.1.1'
-+        implementation 'org.androidaudioplugin:androidaudioplugin:0.7.5-pre'
++        implementation 'org.androidaudioplugin:androidaudioplugin:0.7.5'
 +    }
 +
 +    buildFeatures {
@@ -287,7 +288,7 @@ index 1e66e1fd..44c35164 100644
  
  #if ! DONT_SET_USING_JUCE_NAMESPACE
 diff --git a/Source/Core/Audio/AudioCore.cpp b/Source/Core/Audio/AudioCore.cpp
-index 13c3bb38..0a7cbf98 100644
+index 13c3bb38..a8064e1c 100644
 --- a/Source/Core/Audio/AudioCore.cpp
 +++ b/Source/Core/Audio/AudioCore.cpp
 @@ -23,12 +23,17 @@
