@@ -1,9 +1,13 @@
 diff --git a/Projects/Android/app/CMakeLists.txt b/Projects/Android/app/CMakeLists.txt
-index e9db491b..363d0a57 100644
+index e9db491b..814e2c91 100644
 --- a/Projects/Android/app/CMakeLists.txt
 +++ b/Projects/Android/app/CMakeLists.txt
-@@ -11,10 +11,11 @@ set_source_files_properties("${ANDROID_NDK}/sources/android/cpufeatures/cpu-feat
- add_definitions("-DJUCE_ANDROID=1" "-DJUCE_ANDROID_API_VERSION=21" "-DJUCE_ANDROID_GL_ES_VERSION_3_0=1" "-DJUCER_ANDROIDSTUDIO_6AB8437A=1" "-DJUCE_APP_VERSION=3.10" "-DJUCE_APP_VERSION_HEX=0x30a00")
+@@ -8,13 +8,14 @@ set(BINARY_NAME "juce_jni")
+ add_library("cpufeatures" STATIC "${ANDROID_NDK}/sources/android/cpufeatures/cpu-features.c")
+ set_source_files_properties("${ANDROID_NDK}/sources/android/cpufeatures/cpu-features.c" PROPERTIES COMPILE_FLAGS "-Wno-sign-conversion -Wno-gnu-statement-expression")
+ 
+-add_definitions("-DJUCE_ANDROID=1" "-DJUCE_ANDROID_API_VERSION=21" "-DJUCE_ANDROID_GL_ES_VERSION_3_0=1" "-DJUCER_ANDROIDSTUDIO_6AB8437A=1" "-DJUCE_APP_VERSION=3.10" "-DJUCE_APP_VERSION_HEX=0x30a00")
++add_definitions("-DJUCE_ANDROID=1" "-DJUCE_ANDROID_API_VERSION=21" "-DJUCE_ANDROID_GL_ES_VERSION_3_0=1" "-DJUCER_ANDROIDSTUDIO_6AB8437A=1" "-DJUCE_APP_VERSION=3.10" "-DJUCE_APP_VERSION_HEX=0x30a00" "-DJUCE_USE_ANDROID_OBOE_STABILIZED_CALLBACK=1")
  
  include_directories( AFTER
 -    "../../../ThirdParty/JUCE/modules/juce_audio_processors/format_types/VST3_SDK"
@@ -56,7 +60,7 @@ index e9db491b..363d0a57 100644
 +    androidaudioplugin::androidaudioplugin
  )
 diff --git a/Projects/Android/app/build.gradle b/Projects/Android/app/build.gradle
-index cd1afcaf..e3210953 100644
+index cd1afcaf..ddf5c3e9 100644
 --- a/Projects/Android/app/build.gradle
 +++ b/Projects/Android/app/build.gradle
 @@ -1,31 +1,24 @@
@@ -146,7 +150,7 @@ index cd1afcaf..e3210953 100644
  
      dependencies {
 +        implementation 'androidx.startup:startup-runtime:1.1.1'
-+        implementation 'org.androidaudioplugin:androidaudioplugin:0.7.5'
++        implementation 'org.androidaudioplugin:androidaudioplugin:0.7.6-pre'
 +    }
 +
 +    buildFeatures {
@@ -154,12 +158,12 @@ index cd1afcaf..e3210953 100644
      }
  
 -ndkVersion "21.3.6528147"
-+ndkVersion "25.1.8937393"
++ndkVersion "25.2.9519653"
  
  }
  
 diff --git a/Projects/Android/app/src/main/AndroidManifest.xml b/Projects/Android/app/src/main/AndroidManifest.xml
-index f6967cb9..dca70122 100644
+index f6967cb9..b066b673 100644
 --- a/Projects/Android/app/src/main/AndroidManifest.xml
 +++ b/Projects/Android/app/src/main/AndroidManifest.xml
 @@ -1,11 +1,18 @@
@@ -172,7 +176,7 @@ index f6967cb9..dca70122 100644
 +    android:versionCode="310" android:versionName="3.10">
 +  <queries>
 +    <intent>
-+      <action android:name="org.androidaudioplugin.AudioPluginService.V2" />
++      <action android:name="org.androidaudioplugin.AudioPluginService.V3" />
 +    </intent>
 +  </queries>
    <supports-screens android:smallScreens="true" android:normalScreens="true" android:largeScreens="true" android:anyDensity="true"
@@ -309,3 +313,27 @@ index 13c3bb38..a8064e1c 100644
  }
  
  AudioCore::AudioCore()
+@@ -324,8 +329,8 @@ Instrument *AudioCore::getMetronomeInstrument() const noexcept
+ 
+ String AudioCore::getMetronomeInstrumentId() const noexcept
+ {
+-    const auto *metronome = this->getMetronomeInstrument();
+-    return metronome != nullptr ? metronome->getInstrumentId() : String();
++    //const auto *metronome = this->getMetronomeInstrument();
++    return "";//metronome != nullptr ? metronome->getInstrumentId() : String();
+ }
+ 
+ void AudioCore::initBuiltInInstrumentsIfNeeded()
+diff --git a/Source/Core/Tree/OrchestraPitNode.cpp b/Source/Core/Tree/OrchestraPitNode.cpp
+index 100677dd..f7e40d14 100644
+--- a/Source/Core/Tree/OrchestraPitNode.cpp
++++ b/Source/Core/Tree/OrchestraPitNode.cpp
+@@ -88,7 +88,7 @@ void OrchestraPitNode::onAddInstrument(Instrument *instrument)
+             // this assertion shouldn't be hit normally,
+             // but it will, if some future version of this app
+             // adds more built-in instruments, like metronome:
+-            jassertfalse;
++            //jassertfalse;
+             return;
+         }
+     }
