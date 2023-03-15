@@ -1,5 +1,5 @@
 diff --git a/Projects/Android/app/CMakeLists.txt b/Projects/Android/app/CMakeLists.txt
-index e9db491b..814e2c91 100644
+index e9db491b..800db074 100644
 --- a/Projects/Android/app/CMakeLists.txt
 +++ b/Projects/Android/app/CMakeLists.txt
 @@ -8,13 +8,14 @@ set(BINARY_NAME "juce_jni")
@@ -7,7 +7,7 @@ index e9db491b..814e2c91 100644
  set_source_files_properties("${ANDROID_NDK}/sources/android/cpufeatures/cpu-features.c" PROPERTIES COMPILE_FLAGS "-Wno-sign-conversion -Wno-gnu-statement-expression")
  
 -add_definitions("-DJUCE_ANDROID=1" "-DJUCE_ANDROID_API_VERSION=21" "-DJUCE_ANDROID_GL_ES_VERSION_3_0=1" "-DJUCER_ANDROIDSTUDIO_6AB8437A=1" "-DJUCE_APP_VERSION=3.10" "-DJUCE_APP_VERSION_HEX=0x30a00")
-+add_definitions("-DJUCE_ANDROID=1" "-DJUCE_ANDROID_API_VERSION=21" "-DJUCE_ANDROID_GL_ES_VERSION_3_0=1" "-DJUCER_ANDROIDSTUDIO_6AB8437A=1" "-DJUCE_APP_VERSION=3.10" "-DJUCE_APP_VERSION_HEX=0x30a00" "-DJUCE_USE_ANDROID_OBOE_STABILIZED_CALLBACK=1")
++add_definitions("-DJUCE_ANDROID=1" "-DJUCE_ANDROID_API_VERSION=29" "-DJUCE_ANDROID_GL_ES_VERSION_3_0=1" "-DJUCER_ANDROIDSTUDIO_6AB8437A=1" "-DJUCE_APP_VERSION=3.10" "-DJUCE_APP_VERSION_HEX=0x30a00" "-DJUCE_USE_ANDROID_OBOE_STABILIZED_CALLBACK=1" "-DJUCE_DONT_AUTO_OPEN_MIDI_DEVICES_ON_MOBILE=1")
  
  include_directories( AFTER
 -    "../../../ThirdParty/JUCE/modules/juce_audio_processors/format_types/VST3_SDK"
@@ -15,7 +15,7 @@ index e9db491b..814e2c91 100644
      "../../Projucer/JuceLibraryCode"
      "../../../ThirdParty/JUCE/modules"
      "${ANDROID_NDK}/sources/android/cpufeatures"
-+    "../../../../aap-juce/modules"
++    "../../../../aap-juce/aap-modules"
  )
  
  enable_language(ASM)
@@ -60,7 +60,7 @@ index e9db491b..814e2c91 100644
 +    androidaudioplugin::androidaudioplugin
  )
 diff --git a/Projects/Android/app/build.gradle b/Projects/Android/app/build.gradle
-index cd1afcaf..ddf5c3e9 100644
+index cd1afcaf..a7a82dbb 100644
 --- a/Projects/Android/app/build.gradle
 +++ b/Projects/Android/app/build.gradle
 @@ -1,31 +1,24 @@
@@ -95,7 +95,7 @@ index cd1afcaf..ddf5c3e9 100644
          externalNativeBuild {
              cmake {
 -                arguments "-DANDROID_TOOLCHAIN=clang", "-DANDROID_PLATFORM=android-21", "-DANDROID_STL=c++_static", "-DANDROID_CPP_FEATURES=exceptions rtti", "-DANDROID_ARM_MODE=arm", "-DANDROID_ARM_NEON=TRUE", "-DCMAKE_CXX_STANDARD=14", "-DCMAKE_CXX_EXTENSIONS=OFF"
-+                arguments "-DANDROID_TOOLCHAIN=clang", "-DANDROID_PLATFORM=android-21", "-DANDROID_STL=c++_shared", "-DANDROID_CPP_FEATURES=exceptions rtti", "-DANDROID_ARM_MODE=arm", "-DANDROID_ARM_NEON=TRUE", "-DCMAKE_CXX_STANDARD=17", "-DCMAKE_CXX_EXTENSIONS=OFF"
++                arguments "-DANDROID_TOOLCHAIN=clang", "-DANDROID_PLATFORM=android-29", "-DANDROID_STL=c++_shared", "-DANDROID_CPP_FEATURES=exceptions rtti", "-DANDROID_ARM_MODE=arm", "-DANDROID_ARM_NEON=TRUE", "-DCMAKE_CXX_STANDARD=17", "-DCMAKE_CXX_EXTENSIONS=OFF"
              }
          }
 +        proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
