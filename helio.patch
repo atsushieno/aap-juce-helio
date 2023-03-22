@@ -60,10 +60,10 @@ index e9db491b..800db074 100644
 +    androidaudioplugin::androidaudioplugin
  )
 diff --git a/Projects/Android/app/build.gradle b/Projects/Android/app/build.gradle
-index cd1afcaf..a7a82dbb 100644
+index cd1afcaf..65f5e6a8 100644
 --- a/Projects/Android/app/build.gradle
 +++ b/Projects/Android/app/build.gradle
-@@ -1,31 +1,24 @@
+@@ -1,31 +1,25 @@
  apply plugin: 'com.android.application'
  
  android {
@@ -72,6 +72,7 @@ index cd1afcaf..a7a82dbb 100644
 +    compileSdk = 33
      externalNativeBuild {
          cmake {
++            version libs.versions.cmake.get()
              path "CMakeLists.txt"
          }
      }
@@ -102,7 +103,7 @@ index cd1afcaf..a7a82dbb 100644
      }
  
      buildTypes {
-@@ -33,22 +26,17 @@ android {
+@@ -33,22 +27,17 @@ android {
               initWith debug
               debuggable    true
               jniDebuggable true
@@ -125,7 +126,7 @@ index cd1afcaf..a7a82dbb 100644
              externalNativeBuild {
                  cmake {
                      arguments "-DJUCE_BUILD_CONFIGURATION=DEBUG", "-DCMAKE_CXX_FLAGS_DEBUG=-O0", "-DCMAKE_C_FLAGS_DEBUG=-O0"
-@@ -58,9 +46,6 @@ android {
+@@ -58,9 +47,6 @@ android {
              dimension "default"
         }
          release_ {
@@ -135,7 +136,7 @@ index cd1afcaf..a7a82dbb 100644
              externalNativeBuild {
                  cmake {
                      arguments "-DJUCE_BUILD_CONFIGURATION=RELEASE", "-DCMAKE_CXX_FLAGS_RELEASE=-O3", "-DCMAKE_C_FLAGS_RELEASE=-O3"
-@@ -86,7 +71,8 @@ android {
+@@ -86,7 +72,8 @@ android {
      sourceSets {
          main.java.srcDirs +=
              ["../../../ThirdParty/JUCE/modules/juce_core/native/javacore/init",
@@ -145,12 +146,13 @@ index cd1afcaf..a7a82dbb 100644
  
          main.res.srcDirs +=
              []
-@@ -96,9 +82,15 @@ android {
+@@ -96,9 +83,16 @@ android {
      }
  
      dependencies {
-+        implementation 'androidx.startup:startup-runtime:1.1.1'
-+        implementation 'org.androidaudioplugin:androidaudioplugin:0.7.6-pre'
++        implementation libs.startup.runtime
++        implementation libs.aap.core
++        implementation libs.aap.ui.web
 +    }
 +
 +    buildFeatures {
@@ -158,7 +160,7 @@ index cd1afcaf..a7a82dbb 100644
      }
  
 -ndkVersion "21.3.6528147"
-+ndkVersion "25.2.9519653"
++ndkVersion libs.versions.ndk.get()
  
  }
  
@@ -236,14 +238,14 @@ index 0fe5b4aa..797a11ea 100644
     }
  }
 diff --git a/Projects/Android/gradle/wrapper/gradle-wrapper.properties b/Projects/Android/gradle/wrapper/gradle-wrapper.properties
-index 49479605..f26fd695 100644
+index 49479605..3ffebc84 100644
 --- a/Projects/Android/gradle/wrapper/gradle-wrapper.properties
 +++ b/Projects/Android/gradle/wrapper/gradle-wrapper.properties
 @@ -1 +1,5 @@
 -distributionUrl=https\://services.gradle.org/distributions/gradle-6.1.1-all.zip
 \ No newline at end of file
 +distributionBase=GRADLE_USER_HOME
-+distributionUrl=https\://services.gradle.org/distributions/gradle-7.6-bin.zip
++distributionUrl=https\://services.gradle.org/distributions/gradle-8.0-bin.zip
 +distributionPath=wrapper/dists
 +zipStorePath=wrapper/dists
 +zipStoreBase=GRADLE_USER_HOME

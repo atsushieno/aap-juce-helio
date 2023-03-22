@@ -15,7 +15,8 @@ build-aap-core:
 	cd $(AAP_DIR) && ./gradlew build publishToMavenLocal
 
 build-helio: patch-helio
-	cp gradle.properties $(ANDROID_APP_DIR)
+	cp $(AAP_JUCE_DIR)/sample-project.gradle.properties $(ANDROID_APP_DIR)/gradle.properties
+	cp $(AAP_JUCE_DIR)/sample-project.libs.versions.toml $(ANDROID_APP_DIR)/gradle/libs.versions.toml
 	cd $(ANDROID_APP_DIR) && ./gradlew build bundle
 
 patch-helio: .stamp-helio
