@@ -302,7 +302,7 @@ index 13c3bb38..a8064e1c 100644
  #include "SerializationKeys.h"
  #include "AudioMonitor.h"
 +#include "aap/core/host/audio-plugin-host.h"
-+#include "juceaap_audio_processors/juceaap_audio_plugin_format.cpp"
++#include "aap_audio_plugin_client/aap_audio_plugin_client.cpp"
 +
  
  void AudioCore::initAudioFormats(AudioPluginFormatManager &formatManager)
