@@ -29,9 +29,10 @@ patch-juce: $(JUCE_DIR)/.stamp-juce
 
 $(JUCE_DIR)/.stamp-juce:
 	cd $(JUCE_DIR) ; \
-		patch -i $(AAP_JUCE_DIR)/JUCE-support-Android-thread-via-dalvik-juce6.patch -p1 ; \
-		patch -i $(AAP_JUCE_DIR)/JUCE-support-Android-kill-system-class-loader.patch -p1 ; \
-		patch -i $(AAP_JUCE_DIR)/JUCE-support-Android-disable-detach-current-thread-juce6.patch -p1 ; \
+		patch -i $(AAP_JUCE_DIR)/JUCE-support-Android-thread-via-dalvik-juce6.patch -p1 -l ; \
+		patch -i $(AAP_JUCE_DIR)/JUCE-support-Android-kill-system-class-loader.patch -p1 -l ; \
+		patch -i $(AAP_JUCE_DIR)/JUCE-support-Android-disable-detach-current-thread-juce6.patch -p1 -l ; \
+		patch -i $(AAP_JUCE_DIR)/JUCE-76589ee.patch -p1 -l ; \
 	touch .stamp-juce
 
 dist:
