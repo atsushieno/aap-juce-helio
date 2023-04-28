@@ -1,13 +1,15 @@
 diff --git a/Projects/Android/app/CMakeLists.txt b/Projects/Android/app/CMakeLists.txt
-index e9db491b..800db074 100644
+index e9db491b..0521baec 100644
 --- a/Projects/Android/app/CMakeLists.txt
 +++ b/Projects/Android/app/CMakeLists.txt
-@@ -8,13 +8,14 @@ set(BINARY_NAME "juce_jni")
+@@ -8,13 +8,17 @@ set(BINARY_NAME "juce_jni")
  add_library("cpufeatures" STATIC "${ANDROID_NDK}/sources/android/cpufeatures/cpu-features.c")
  set_source_files_properties("${ANDROID_NDK}/sources/android/cpufeatures/cpu-features.c" PROPERTIES COMPILE_FLAGS "-Wno-sign-conversion -Wno-gnu-statement-expression")
  
 -add_definitions("-DJUCE_ANDROID=1" "-DJUCE_ANDROID_API_VERSION=21" "-DJUCE_ANDROID_GL_ES_VERSION_3_0=1" "-DJUCER_ANDROIDSTUDIO_6AB8437A=1" "-DJUCE_APP_VERSION=3.10" "-DJUCE_APP_VERSION_HEX=0x30a00")
 +add_definitions("-DJUCE_ANDROID=1" "-DJUCE_ANDROID_API_VERSION=29" "-DJUCE_ANDROID_GL_ES_VERSION_3_0=1" "-DJUCER_ANDROIDSTUDIO_6AB8437A=1" "-DJUCE_APP_VERSION=3.10" "-DJUCE_APP_VERSION_HEX=0x30a00" "-DJUCE_USE_ANDROID_OBOE_STABILIZED_CALLBACK=1" "-DJUCE_DONT_AUTO_OPEN_MIDI_DEVICES_ON_MOBILE=1")
++
++add_subdirectory("../../../ThirdParty/JUCE/modules/juce_audio_devices/native/oboe" "./oboe")
  
  include_directories( AFTER
 -    "../../../ThirdParty/JUCE/modules/juce_audio_processors/format_types/VST3_SDK"
@@ -16,10 +18,11 @@ index e9db491b..800db074 100644
      "../../../ThirdParty/JUCE/modules"
      "${ANDROID_NDK}/sources/android/cpufeatures"
 +    "../../../../aap-juce/aap-modules"
++    "../../../ThirdParty/JUCE/modules/juce_audio_devices/native/oboe/include"
  )
  
  enable_language(ASM)
-@@ -24,7 +25,7 @@ if(JUCE_BUILD_CONFIGURATION MATCHES "DEBUG")
+@@ -24,7 +28,7 @@ if(JUCE_BUILD_CONFIGURATION MATCHES "DEBUG")
      include_directories( AFTER
          "../../Projucer/JuceLibraryCode"
          "../../../ThirdParty/JUCE/modules"
@@ -28,7 +31,7 @@ index e9db491b..800db074 100644
          "../../../ThirdParty/ASIO/common"
          "../../../Source"
          "../../../Source/Core"
-@@ -188,8 +189,10 @@ add_library( ${BINARY_NAME}
+@@ -188,8 +192,10 @@ add_library( ${BINARY_NAME}
      "../../Projucer/JuceLibraryCode/include_juce_opengl.cpp"
      "../../Projucer/JuceLibraryCode/JuceHeader.h"
      "../../Projucer/JuceLibraryCode/UnityBuild.cpp"
@@ -39,7 +42,7 @@ index e9db491b..800db074 100644
  set_source_files_properties("../../Projucer/JuceLibraryCode/AppConfig.h" PROPERTIES HEADER_FILE_ONLY TRUE)
  set_source_files_properties("../../Projucer/JuceLibraryCode/BinaryData.h" PROPERTIES HEADER_FILE_ONLY TRUE)
  set_source_files_properties("../../Projucer/JuceLibraryCode/JuceHeader.h" PROPERTIES HEADER_FILE_ONLY TRUE)
-@@ -209,6 +212,13 @@ find_library(android "android")
+@@ -209,11 +215,20 @@ find_library(android "android")
  find_library(glesv3 "GLESv3")
  find_library(egl "EGL")
  
@@ -53,9 +56,10 @@ index e9db491b..800db074 100644
  target_link_libraries( ${BINARY_NAME}
  
      ${log}
-@@ -216,4 +226,5 @@ target_link_libraries( ${BINARY_NAME}
+     ${android}
      ${glesv3}
      ${egl}
++    oboe
      "cpufeatures"
 +    androidaudioplugin::androidaudioplugin
  )
@@ -212,7 +216,7 @@ index f6967cb9..b066b673 100644
 +</application>
  </manifest>
 diff --git a/Projects/Android/build.gradle b/Projects/Android/build.gradle
-index 0fe5b4aa..797a11ea 100644
+index 0fe5b4aa..df6544f6 100644
 --- a/Projects/Android/build.gradle
 +++ b/Projects/Android/build.gradle
 @@ -1,16 +1,18 @@
@@ -225,7 +229,7 @@ index 0fe5b4aa..797a11ea 100644
     }
     dependencies {
 -       classpath 'com.android.tools.build:gradle:4.0.0'
-+       classpath 'com.android.tools.build:gradle:7.3.1'
++       classpath 'com.android.tools.build:gradle:7.4.2'
     }
  }
  
@@ -250,7 +254,7 @@ index 49479605..3ffebc84 100644
 +zipStorePath=wrapper/dists
 +zipStoreBase=GRADLE_USER_HOME
 diff --git a/Projects/Projucer/Helio Workstation.jucer b/Projects/Projucer/Helio Workstation.jucer
-index 71da5f79..9d0d369b 100644
+index 71da5f79..c99e2ac6 100644
 --- a/Projects/Projucer/Helio Workstation.jucer	
 +++ b/Projects/Projucer/Helio Workstation.jucer	
 @@ -1,7 +1,7 @@
@@ -262,10 +266,39 @@ index 71da5f79..9d0d369b 100644
                companyEmail="peter.rudenko@gmail.com" companyName="Peter Rudenko"
                displaySplashScreen="0" reportAppUsage="0" splashScreenColour="Dark"
                cppLanguageStandard="14" usePrecompiledHeaders="0" precompiledHeaderFileName=""
+@@ -1630,8 +1630,8 @@
+                JUCE_USE_LAME_AUDIO_FORMAT="0" JUCE_USE_WINDOWS_MEDIA_FORMAT="0"
+                JUCE_USE_CURL="1" JUCE_USE_XSHM="1" JUCE_USE_XRENDER="0" JUCE_USE_XCURSOR="1"
+                JUCE_WEB_BROWSER="0" JUCE_PLUGINHOST_VST3="1" JUCE_PLUGINHOST_AU="1"
+-               JUCE_EXECUTE_APP_SUSPEND_ON_IOS_BACKGROUND_TASK="1" JUCE_USE_ANDROID_OPENSLES="1"
+-               JUCE_USE_ANDROID_OBOE="0" JUCE_BELA="0" JUCE_ENABLE_LIVE_CONSTANT_EDITOR="0"
++               JUCE_EXECUTE_APP_SUSPEND_ON_IOS_BACKGROUND_TASK="1" JUCE_USE_ANDROID_OPENSLES="0"
++               JUCE_USE_ANDROID_OBOE="1" JUCE_BELA="0" JUCE_ENABLE_LIVE_CONSTANT_EDITOR="0"
+                JUCE_STRICT_REFCOUNTEDPOINTER="1" JUCE_DISABLE_COREGRAPHICS_FONT_SMOOTHING="1"
+                JUCE_WIN_PER_MONITOR_DPI_AWARE="1" JUCE_ALLOW_STATIC_NULL_VARIABLES="0"
+                JUCE_PLUGINHOST_VST="1"/>
 diff --git a/Projects/Projucer/JuceLibraryCode/AppConfig.h b/Projects/Projucer/JuceLibraryCode/AppConfig.h
-index 159c5b51..898d583f 100644
+index 159c5b51..a56f3194 100644
 --- a/Projects/Projucer/JuceLibraryCode/AppConfig.h
 +++ b/Projects/Projucer/JuceLibraryCode/AppConfig.h
+@@ -92,7 +92,7 @@
+ #endif
+ 
+ #ifndef    JUCE_USE_ANDROID_OBOE
+- #define   JUCE_USE_ANDROID_OBOE 0
++ #define   JUCE_USE_ANDROID_OBOE 1
+ #endif
+ 
+ #ifndef    JUCE_USE_OBOE_STABILIZED_CALLBACK
+@@ -100,7 +100,7 @@
+ #endif
+ 
+ #ifndef    JUCE_USE_ANDROID_OPENSLES
+- #define   JUCE_USE_ANDROID_OPENSLES 1
++ #define   JUCE_USE_ANDROID_OPENSLES 0
+ #endif
+ 
+ #ifndef    JUCE_DISABLE_AUDIO_MIXING_WITH_OTHER_APPS
 @@ -134,11 +134,11 @@
  // juce_audio_processors flags:
  
@@ -294,7 +327,7 @@ index 1e66e1fd..44c35164 100644
  
  #if ! DONT_SET_USING_JUCE_NAMESPACE
 diff --git a/Source/Core/Audio/AudioCore.cpp b/Source/Core/Audio/AudioCore.cpp
-index 13c3bb38..a8064e1c 100644
+index 13c3bb38..809feb7e 100644
 --- a/Source/Core/Audio/AudioCore.cpp
 +++ b/Source/Core/Audio/AudioCore.cpp
 @@ -23,12 +23,17 @@
