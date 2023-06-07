@@ -16,6 +16,7 @@ build-aap-core:
 
 build-helio: patch-helio
 	cp $(AAP_JUCE_DIR)/sample-project.gradle.properties $(ANDROID_APP_DIR)/gradle.properties
+	cp override.gradle-wrapper.properties $(ANDROID_APP_DIR)/gradle/wrapper/gradle-wrapper.properties
 	cp $(AAP_JUCE_DIR)/sample-project.libs.versions.toml $(ANDROID_APP_DIR)/gradle/libs.versions.toml
 	cd $(ANDROID_APP_DIR) && ./gradlew build bundle
 

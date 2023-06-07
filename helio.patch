@@ -64,7 +64,7 @@ index e9db491b..0521baec 100644
 +    androidaudioplugin::androidaudioplugin
  )
 diff --git a/Projects/Android/app/build.gradle b/Projects/Android/app/build.gradle
-index cd1afcaf..65f5e6a8 100644
+index cd1afcaf..d293dea9 100644
 --- a/Projects/Android/app/build.gradle
 +++ b/Projects/Android/app/build.gradle
 @@ -1,31 +1,25 @@
@@ -150,12 +150,13 @@ index cd1afcaf..65f5e6a8 100644
  
          main.res.srcDirs +=
              []
-@@ -96,9 +83,16 @@ android {
+@@ -96,9 +83,17 @@ android {
      }
  
      dependencies {
 +        implementation libs.startup.runtime
 +        implementation libs.aap.core
++        implementation libs.aap.ui.compose
 +        implementation libs.aap.ui.web
 +    }
 +
@@ -242,14 +243,14 @@ index 0fe5b4aa..df6544f6 100644
     }
  }
 diff --git a/Projects/Android/gradle/wrapper/gradle-wrapper.properties b/Projects/Android/gradle/wrapper/gradle-wrapper.properties
-index 49479605..3ffebc84 100644
+index 49479605..f26fd695 100644
 --- a/Projects/Android/gradle/wrapper/gradle-wrapper.properties
 +++ b/Projects/Android/gradle/wrapper/gradle-wrapper.properties
 @@ -1 +1,5 @@
 -distributionUrl=https\://services.gradle.org/distributions/gradle-6.1.1-all.zip
 \ No newline at end of file
 +distributionBase=GRADLE_USER_HOME
-+distributionUrl=https\://services.gradle.org/distributions/gradle-8.0-bin.zip
++distributionUrl=https\://services.gradle.org/distributions/gradle-7.6-bin.zip
 +distributionPath=wrapper/dists
 +zipStorePath=wrapper/dists
 +zipStoreBase=GRADLE_USER_HOME
@@ -372,3 +373,9 @@ index 100677dd..f7e40d14 100644
              return;
          }
      }
+diff --git a/ThirdParty/JUCE b/ThirdParty/JUCE
+--- a/ThirdParty/JUCE
++++ b/ThirdParty/JUCE
+@@ -1 +1 @@
+-Subproject commit ad8ce3b1e60d81fc10b5366d704dba045bdddf3a
++Subproject commit ad8ce3b1e60d81fc10b5366d704dba045bdddf3a-dirty
