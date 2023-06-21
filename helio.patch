@@ -373,9 +373,3 @@ index 100677dd..f7e40d14 100644
              return;
          }
      }
-diff --git a/ThirdParty/JUCE b/ThirdParty/JUCE
---- a/ThirdParty/JUCE
-+++ b/ThirdParty/JUCE
-@@ -1 +1 @@
--Subproject commit ad8ce3b1e60d81fc10b5366d704dba045bdddf3a
-+Subproject commit ad8ce3b1e60d81fc10b5366d704dba045bdddf3a-dirty
