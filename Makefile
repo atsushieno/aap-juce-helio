@@ -15,9 +15,9 @@ build-aap-core:
 	cd $(AAP_DIR) && ./gradlew build publishToMavenLocal
 
 build-helio: patch-helio
-	cp $(AAP_JUCE_DIR)/sample-project.gradle.properties $(ANDROID_APP_DIR)/gradle.properties
-	cp override.gradle-wrapper.properties $(ANDROID_APP_DIR)/gradle/wrapper/gradle-wrapper.properties
-	cp $(AAP_JUCE_DIR)/sample-project.libs.versions.toml $(ANDROID_APP_DIR)/gradle/libs.versions.toml
+	cp $(AAP_JUCE_DIR)/projuce-app-template/gradle.properties $(ANDROID_APP_DIR)/gradle.properties
+	cp $(AAP_JUCE_DIR)/projuce-app-template/gradle-wrapper.properties $(ANDROID_APP_DIR)/gradle/wrapper/gradle-wrapper.properties
+	cp $(AAP_JUCE_DIR)/projuce-app-template/libs.versions.toml $(ANDROID_APP_DIR)/gradle/libs.versions.toml
 	cd $(ANDROID_APP_DIR) && ./gradlew build bundle
 
 patch-helio: .stamp-helio
