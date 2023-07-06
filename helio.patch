@@ -218,10 +218,10 @@ index f6967cb9..b066b673 100644
 +</application>
  </manifest>
 diff --git a/Projects/Android/build.gradle b/Projects/Android/build.gradle
-index 0fe5b4aa..9fba3f80 100644
+index 0fe5b4aa..6800c846 100644
 --- a/Projects/Android/build.gradle
 +++ b/Projects/Android/build.gradle
-@@ -1,16 +1,18 @@
+@@ -1,16 +1,19 @@
  buildscript {
     repositories {
         google()
@@ -232,6 +232,7 @@ index 0fe5b4aa..9fba3f80 100644
     dependencies {
 -       classpath 'com.android.tools.build:gradle:4.0.0'
 +       classpath libs.tools.build.gradle
++       classpath libs.kotlin.gradle.plugin
     }
  }
  
