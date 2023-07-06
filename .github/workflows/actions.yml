@@ -6,4 +6,4 @@ on:
 
 jobs:
   build-dist:
-    uses: atsushieno/aap-juce/.github/workflows/build-dist-with-projucer.yml@0fe64a9c923876d167d1597c49753ce6c26339d0
+    uses: atsushieno/aap-juce/.github/workflows/build-dist-with-projucer.yml@main
