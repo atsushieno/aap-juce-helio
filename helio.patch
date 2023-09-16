@@ -1,5 +1,5 @@
 diff --git a/Projects/Android/app/CMakeLists.txt b/Projects/Android/app/CMakeLists.txt
-index e9db491b..0521baec 100644
+index e9db491b..411f057d 100644
 --- a/Projects/Android/app/CMakeLists.txt
 +++ b/Projects/Android/app/CMakeLists.txt
 @@ -8,13 +8,17 @@ set(BINARY_NAME "juce_jni")
@@ -31,10 +31,12 @@ index e9db491b..0521baec 100644
          "../../../ThirdParty/ASIO/common"
          "../../../Source"
          "../../../Source/Core"
-@@ -188,8 +192,10 @@ add_library( ${BINARY_NAME}
+@@ -187,9 +191,11 @@ add_library( ${BINARY_NAME}
+     "../../Projucer/JuceLibraryCode/include_juce_gui_extra.cpp"
      "../../Projucer/JuceLibraryCode/include_juce_opengl.cpp"
      "../../Projucer/JuceLibraryCode/JuceHeader.h"
-     "../../Projucer/JuceLibraryCode/UnityBuild.cpp"
+-    "../../Projucer/JuceLibraryCode/UnityBuild.cpp"
++    #"../../Projucer/JuceLibraryCode/UnityBuild.cpp"
 +    "../../../../../juceaap.cpp"
  )
  
@@ -64,7 +66,7 @@ index e9db491b..0521baec 100644
 +    androidaudioplugin::androidaudioplugin
  )
 diff --git a/Projects/Android/app/build.gradle b/Projects/Android/app/build.gradle
-index cd1afcaf..b4811b0d 100644
+index cd1afcaf..f233adbf 100644
 --- a/Projects/Android/app/build.gradle
 +++ b/Projects/Android/app/build.gradle
 @@ -1,31 +1,26 @@
@@ -74,7 +76,7 @@ index cd1afcaf..b4811b0d 100644
  android {
 -    compileSdkVersion 28
 +    namespace "org.androidaudioplugin.ports.juce.helio"
-+    compileSdk = 33
++    compileSdk = 34
      externalNativeBuild {
          cmake {
 +            version libs.versions.cmake.get()
@@ -97,7 +99,7 @@ index cd1afcaf..b4811b0d 100644
 -        targetSdkVersion 28
 +        applicationId "org.androidaudioplugin.ports.juce.helio"
 +        minSdkVersion    29
-+        targetSdkVersion 33
++        targetSdkVersion 34
          externalNativeBuild {
              cmake {
 -                arguments "-DANDROID_TOOLCHAIN=clang", "-DANDROID_PLATFORM=android-21", "-DANDROID_STL=c++_static", "-DANDROID_CPP_FEATURES=exceptions rtti", "-DANDROID_ARM_MODE=arm", "-DANDROID_ARM_NEON=TRUE", "-DCMAKE_CXX_STANDARD=14", "-DCMAKE_CXX_EXTENSIONS=OFF"
