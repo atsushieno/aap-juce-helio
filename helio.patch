@@ -1,15 +1,9 @@
 diff --git a/Projects/Android/app/CMakeLists.txt b/Projects/Android/app/CMakeLists.txt
-index e9db491b..0521baec 100644
+index 21b1f0ec..550282de 100644
 --- a/Projects/Android/app/CMakeLists.txt
 +++ b/Projects/Android/app/CMakeLists.txt
-@@ -8,13 +8,17 @@ set(BINARY_NAME "juce_jni")
- add_library("cpufeatures" STATIC "${ANDROID_NDK}/sources/android/cpufeatures/cpu-features.c")
- set_source_files_properties("${ANDROID_NDK}/sources/android/cpufeatures/cpu-features.c" PROPERTIES COMPILE_FLAGS "-Wno-sign-conversion -Wno-gnu-statement-expression")
- 
--add_definitions("-DJUCE_ANDROID=1" "-DJUCE_ANDROID_API_VERSION=21" "-DJUCE_ANDROID_GL_ES_VERSION_3_0=1" "-DJUCER_ANDROIDSTUDIO_6AB8437A=1" "-DJUCE_APP_VERSION=3.10" "-DJUCE_APP_VERSION_HEX=0x30a00")
-+add_definitions("-DJUCE_ANDROID=1" "-DJUCE_ANDROID_API_VERSION=29" "-DJUCE_ANDROID_GL_ES_VERSION_3_0=1" "-DJUCER_ANDROIDSTUDIO_6AB8437A=1" "-DJUCE_APP_VERSION=3.10" "-DJUCE_APP_VERSION_HEX=0x30a00" "-DJUCE_USE_ANDROID_OBOE_STABILIZED_CALLBACK=1" "-DJUCE_DONT_AUTO_OPEN_MIDI_DEVICES_ON_MOBILE=1")
-+
-+add_subdirectory("../../../ThirdParty/JUCE/modules/juce_audio_devices/native/oboe" "./oboe")
+@@ -11,10 +11,12 @@ set_source_files_properties("${ANDROID_NDK}/sources/android/cpufeatures/cpu-feat
+ add_definitions("-DJUCE_ANDROID=1" "-DJUCE_ANDROID_API_VERSION=21" "-DJUCE_ANDROID_GL_ES_VERSION_3_0=1" "-DJUCER_ANDROIDSTUDIO_6AB8437A=1" "-DJUCE_APP_VERSION=3.11" "-DJUCE_APP_VERSION_HEX=0x30b00")
  
  include_directories( AFTER
 -    "../../../ThirdParty/JUCE/modules/juce_audio_processors/format_types/VST3_SDK"
@@ -22,16 +16,25 @@ index e9db491b..0521baec 100644
  )
  
  enable_language(ASM)
-@@ -24,7 +28,7 @@ if(JUCE_BUILD_CONFIGURATION MATCHES "DEBUG")
+@@ -24,7 +26,7 @@ if(JUCE_BUILD_CONFIGURATION MATCHES "DEBUG")
      include_directories( AFTER
          "../../Projucer/JuceLibraryCode"
          "../../../ThirdParty/JUCE/modules"
 -        "../../../ThirdParty/JUCE/modules/juce_audio_processors/format_types/VST3_SDK"
 +        #"../../../ThirdParty/JUCE/modules/juce_audio_processors/format_types/VST3_SDK"
-         "../../../ThirdParty/ASIO/common"
-         "../../../Source"
-         "../../../Source/Core"
-@@ -188,8 +192,10 @@ add_library( ${BINARY_NAME}
+         "../../../ThirdParty/JUCE/modules/juce_audio_processors/format_types/LV2_SDK"
+         "../../../ThirdParty/JUCE/modules/juce_audio_processors/format_types/LV2_SDK/serd"
+         "../../../ThirdParty/JUCE/modules/juce_audio_processors/format_types/LV2_SDK/sord"
+@@ -102,7 +104,7 @@ elseif(JUCE_BUILD_CONFIGURATION MATCHES "RELEASE")
+     include_directories( AFTER
+         "../../Projucer/JuceLibraryCode"
+         "../../../ThirdParty/JUCE/modules"
+-        "../../../ThirdParty/JUCE/modules/juce_audio_processors/format_types/VST3_SDK"
++        #"../../../ThirdParty/JUCE/modules/juce_audio_processors/format_types/VST3_SDK"
+         "../../../ThirdParty/JUCE/modules/juce_audio_processors/format_types/LV2_SDK"
+         "../../../ThirdParty/JUCE/modules/juce_audio_processors/format_types/LV2_SDK/serd"
+         "../../../ThirdParty/JUCE/modules/juce_audio_processors/format_types/LV2_SDK/sord"
+@@ -204,8 +206,10 @@ add_library( ${BINARY_NAME}
      "../../Projucer/JuceLibraryCode/include_juce_opengl.cpp"
      "../../Projucer/JuceLibraryCode/JuceHeader.h"
      "../../Projucer/JuceLibraryCode/UnityBuild.cpp"
@@ -42,7 +45,7 @@ index e9db491b..0521baec 100644
  set_source_files_properties("../../Projucer/JuceLibraryCode/AppConfig.h" PROPERTIES HEADER_FILE_ONLY TRUE)
  set_source_files_properties("../../Projucer/JuceLibraryCode/BinaryData.h" PROPERTIES HEADER_FILE_ONLY TRUE)
  set_source_files_properties("../../Projucer/JuceLibraryCode/JuceHeader.h" PROPERTIES HEADER_FILE_ONLY TRUE)
-@@ -209,11 +215,20 @@ find_library(android "android")
+@@ -225,11 +229,20 @@ find_library(android "android")
  find_library(glesv3 "GLESv3")
  find_library(egl "EGL")
  
@@ -171,17 +174,15 @@ index cd1afcaf..f233adbf 100644
  }
  
 diff --git a/Projects/Android/app/src/main/AndroidManifest.xml b/Projects/Android/app/src/main/AndroidManifest.xml
-index f6967cb9..b066b673 100644
+index 57d1ff1d..3ddb1a8f 100644
 --- a/Projects/Android/app/src/main/AndroidManifest.xml
 +++ b/Projects/Android/app/src/main/AndroidManifest.xml
-@@ -1,11 +1,18 @@
+@@ -1,11 +1,17 @@
  <?xml version="1.0" encoding="utf-8"?>
  
--<manifest xmlns:android="http://schemas.android.com/apk/res/android" android:versionCode="310" android:versionName="3.10"
+ <manifest xmlns:android="http://schemas.android.com/apk/res/android" android:versionCode="311" android:versionName="3.11"
 -          package="fm.helio">
-+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-+    xmlns:tools="http://schemas.android.com/tools"
-+    android:versionCode="310" android:versionName="3.10">
++    xmlns:tools="http://schemas.android.com/tools">
 +  <queries>
 +    <intent>
 +      <action android:name="org.androidaudioplugin.AudioPluginService.V3" />
@@ -195,7 +196,7 @@ index f6967cb9..b066b673 100644
    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
    <uses-permission android:name="android.permission.BLUETOOTH"/>
-@@ -14,11 +21,19 @@
+@@ -14,11 +20,19 @@
    <application android:label="@string/app_name" android:name="com.rmsl.juce.JuceApp" android:theme="@android:style/Theme.Material.NoActionBar.Fullscreen"
                 android:icon="@drawable/icon" android:hardwareAccelerated="false">
      <activity android:name="android.app.Activity" android:label="@string/app_name" android:configChanges="keyboardHidden|orientation|screenSize"
@@ -257,18 +258,18 @@ index 49479605..33aca6fd 100644
 +zipStorePath=wrapper/dists
 +zipStoreBase=GRADLE_USER_HOME
 diff --git a/Projects/Projucer/Helio Workstation.jucer b/Projects/Projucer/Helio Workstation.jucer
-index 71da5f79..c99e2ac6 100644
+index 043839b4..9a8764c2 100644
 --- a/Projects/Projucer/Helio Workstation.jucer	
 +++ b/Projects/Projucer/Helio Workstation.jucer	
 @@ -1,7 +1,7 @@
  <?xml version="1.0" encoding="UTF-8"?>
  
- <JUCERPROJECT id="lG607P" name="Helio" projectType="guiapp" version="3.10"
+ <JUCERPROJECT id="lG607P" name="Helio" projectType="guiapp" version="3.11"
 -              bundleIdentifier="fm.helio" includeBinaryInAppConfig="1" companyWebsite="https://helio.fm"
 +              bundleIdentifier="org.androidaudioplugin.ports.juce.helio" includeBinaryInAppConfig="1" companyWebsite="https://github.com/atsushieno/aap-juce-helio"
                companyEmail="peter.rudenko@gmail.com" companyName="Peter Rudenko"
                displaySplashScreen="0" reportAppUsage="0" splashScreenColour="Dark"
-               cppLanguageStandard="14" usePrecompiledHeaders="0" precompiledHeaderFileName=""
+               usePrecompiledHeaders="0" precompiledHeaderFileName="" precompiledHeaderExcludedWildcard="include_juce_*"
 @@ -1630,8 +1630,8 @@
                 JUCE_USE_LAME_AUDIO_FORMAT="0" JUCE_USE_WINDOWS_MEDIA_FORMAT="0"
                 JUCE_USE_CURL="1" JUCE_USE_XSHM="1" JUCE_USE_XRENDER="0" JUCE_USE_XCURSOR="1"
@@ -279,12 +280,12 @@ index 71da5f79..c99e2ac6 100644
 +               JUCE_USE_ANDROID_OBOE="1" JUCE_BELA="0" JUCE_ENABLE_LIVE_CONSTANT_EDITOR="0"
                 JUCE_STRICT_REFCOUNTEDPOINTER="1" JUCE_DISABLE_COREGRAPHICS_FONT_SMOOTHING="1"
                 JUCE_WIN_PER_MONITOR_DPI_AWARE="1" JUCE_ALLOW_STATIC_NULL_VARIABLES="0"
-                JUCE_PLUGINHOST_VST="1"/>
+                JUCE_PLUGINHOST_VST="1" JUCE_PLUGINHOST_LV2="1"/>
 diff --git a/Projects/Projucer/JuceLibraryCode/AppConfig.h b/Projects/Projucer/JuceLibraryCode/AppConfig.h
-index 159c5b51..a56f3194 100644
+index f91c2d45..8528b696 100644
 --- a/Projects/Projucer/JuceLibraryCode/AppConfig.h
 +++ b/Projects/Projucer/JuceLibraryCode/AppConfig.h
-@@ -92,7 +92,7 @@
+@@ -90,7 +90,7 @@
  #endif
  
  #ifndef    JUCE_USE_ANDROID_OBOE
@@ -293,7 +294,7 @@ index 159c5b51..a56f3194 100644
  #endif
  
  #ifndef    JUCE_USE_OBOE_STABILIZED_CALLBACK
-@@ -100,7 +100,7 @@
+@@ -98,7 +98,7 @@
  #endif
  
  #ifndef    JUCE_USE_ANDROID_OPENSLES
@@ -302,7 +303,7 @@ index 159c5b51..a56f3194 100644
  #endif
  
  #ifndef    JUCE_DISABLE_AUDIO_MIXING_WITH_OTHER_APPS
-@@ -134,11 +134,11 @@
+@@ -132,11 +132,11 @@
  // juce_audio_processors flags:
  
  #ifndef    JUCE_PLUGINHOST_VST
@@ -317,7 +318,7 @@ index 159c5b51..a56f3194 100644
  
  #ifndef    JUCE_PLUGINHOST_AU
 diff --git a/Projects/Projucer/JuceLibraryCode/JuceHeader.h b/Projects/Projucer/JuceLibraryCode/JuceHeader.h
-index 1e66e1fd..44c35164 100644
+index 8939576b..57ef1cd0 100644
 --- a/Projects/Projucer/JuceLibraryCode/JuceHeader.h
 +++ b/Projects/Projucer/JuceLibraryCode/JuceHeader.h
 @@ -34,7 +34,7 @@
