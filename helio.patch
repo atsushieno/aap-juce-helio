@@ -1,5 +1,5 @@
 diff --git a/Projects/Android/app/CMakeLists.txt b/Projects/Android/app/CMakeLists.txt
-index e9db491b..411f057d 100644
+index e9db491b..0521baec 100644
 --- a/Projects/Android/app/CMakeLists.txt
 +++ b/Projects/Android/app/CMakeLists.txt
 @@ -8,13 +8,17 @@ set(BINARY_NAME "juce_jni")
@@ -31,12 +31,10 @@ index e9db491b..411f057d 100644
          "../../../ThirdParty/ASIO/common"
          "../../../Source"
          "../../../Source/Core"
-@@ -187,9 +191,11 @@ add_library( ${BINARY_NAME}
-     "../../Projucer/JuceLibraryCode/include_juce_gui_extra.cpp"
+@@ -188,8 +192,10 @@ add_library( ${BINARY_NAME}
      "../../Projucer/JuceLibraryCode/include_juce_opengl.cpp"
      "../../Projucer/JuceLibraryCode/JuceHeader.h"
--    "../../Projucer/JuceLibraryCode/UnityBuild.cpp"
-+    #"../../Projucer/JuceLibraryCode/UnityBuild.cpp"
+     "../../Projucer/JuceLibraryCode/UnityBuild.cpp"
 +    "../../../../../juceaap.cpp"
  )
  
@@ -332,13 +330,14 @@ index 1e66e1fd..44c35164 100644
  
  #if ! DONT_SET_USING_JUCE_NAMESPACE
 diff --git a/Source/Core/Audio/AudioCore.cpp b/Source/Core/Audio/AudioCore.cpp
-index 13c3bb38..809feb7e 100644
+index 13c3bb38..5f871e65 100644
 --- a/Source/Core/Audio/AudioCore.cpp
 +++ b/Source/Core/Audio/AudioCore.cpp
-@@ -23,12 +23,17 @@
+@@ -23,12 +23,18 @@
  #include "MetronomeSynthAudioPlugin.h"
  #include "SerializationKeys.h"
  #include "AudioMonitor.h"
++#include "aap_audio_plugin_client/cmidi2.h"
 +#include "aap/core/host/audio-plugin-host.h"
 +#include "aap_audio_plugin_client/aap_audio_plugin_client.cpp"
 +
@@ -353,7 +352,7 @@ index 13c3bb38..809feb7e 100644
  }
  
  AudioCore::AudioCore()
-@@ -324,8 +329,8 @@ Instrument *AudioCore::getMetronomeInstrument() const noexcept
+@@ -324,8 +330,8 @@ Instrument *AudioCore::getMetronomeInstrument() const noexcept
  
  String AudioCore::getMetronomeInstrumentId() const noexcept
  {
