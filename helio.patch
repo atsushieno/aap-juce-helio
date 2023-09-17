@@ -1,9 +1,16 @@
 diff --git a/Projects/Android/app/CMakeLists.txt b/Projects/Android/app/CMakeLists.txt
-index 21b1f0ec..550282de 100644
+index 21b1f0ec..4cc9e2c0 100644
 --- a/Projects/Android/app/CMakeLists.txt
 +++ b/Projects/Android/app/CMakeLists.txt
-@@ -11,10 +11,12 @@ set_source_files_properties("${ANDROID_NDK}/sources/android/cpufeatures/cpu-feat
- add_definitions("-DJUCE_ANDROID=1" "-DJUCE_ANDROID_API_VERSION=21" "-DJUCE_ANDROID_GL_ES_VERSION_3_0=1" "-DJUCER_ANDROIDSTUDIO_6AB8437A=1" "-DJUCE_APP_VERSION=3.11" "-DJUCE_APP_VERSION_HEX=0x30b00")
+@@ -8,13 +8,18 @@ set(BINARY_NAME "juce_jni")
+ add_library("cpufeatures" STATIC "${ANDROID_NDK}/sources/android/cpufeatures/cpu-features.c")
+ set_source_files_properties("${ANDROID_NDK}/sources/android/cpufeatures/cpu-features.c" PROPERTIES COMPILE_FLAGS "-Wno-sign-conversion -Wno-gnu-statement-expression")
+ 
+-add_definitions("-DJUCE_ANDROID=1" "-DJUCE_ANDROID_API_VERSION=21" "-DJUCE_ANDROID_GL_ES_VERSION_3_0=1" "-DJUCER_ANDROIDSTUDIO_6AB8437A=1" "-DJUCE_APP_VERSION=3.11" "-DJUCE_APP_VERSION_HEX=0x30b00")
++add_definitions("-DJUCE_ANDROID=1" "-DJUCE_ANDROID_API_VERSION=29" "-DJUCE_ANDROID_GL_ES_VERSION_3_0=1" "-DJUCER_ANDROIDSTUDIO_6AB8437A=1" "-DJUCE_APP_VERSION=3.11" "-DJUCE_APP_VERSION_HEX=0x30b00")
++add_definitions("-DJUCE_USE_ANDROID_OBOE_STABILIZED_CALLBACK=1" "-DJUCE_DONT_AUTO_OPEN_MIDI_DEVICES_ON_MOBILE=1")
++
++add_subdirectory("../../../ThirdParty/JUCE/modules/juce_audio_devices/native/oboe" "./oboe")
  
  include_directories( AFTER
 -    "../../../ThirdParty/JUCE/modules/juce_audio_processors/format_types/VST3_SDK"
@@ -16,7 +23,7 @@ index 21b1f0ec..550282de 100644
  )
  
  enable_language(ASM)
-@@ -24,7 +26,7 @@ if(JUCE_BUILD_CONFIGURATION MATCHES "DEBUG")
+@@ -24,7 +29,7 @@ if(JUCE_BUILD_CONFIGURATION MATCHES "DEBUG")
      include_directories( AFTER
          "../../Projucer/JuceLibraryCode"
          "../../../ThirdParty/JUCE/modules"
@@ -25,7 +32,7 @@ index 21b1f0ec..550282de 100644
          "../../../ThirdParty/JUCE/modules/juce_audio_processors/format_types/LV2_SDK"
          "../../../ThirdParty/JUCE/modules/juce_audio_processors/format_types/LV2_SDK/serd"
          "../../../ThirdParty/JUCE/modules/juce_audio_processors/format_types/LV2_SDK/sord"
-@@ -102,7 +104,7 @@ elseif(JUCE_BUILD_CONFIGURATION MATCHES "RELEASE")
+@@ -102,7 +107,7 @@ elseif(JUCE_BUILD_CONFIGURATION MATCHES "RELEASE")
      include_directories( AFTER
          "../../Projucer/JuceLibraryCode"
          "../../../ThirdParty/JUCE/modules"
@@ -34,7 +41,7 @@ index 21b1f0ec..550282de 100644
          "../../../ThirdParty/JUCE/modules/juce_audio_processors/format_types/LV2_SDK"
          "../../../ThirdParty/JUCE/modules/juce_audio_processors/format_types/LV2_SDK/serd"
          "../../../ThirdParty/JUCE/modules/juce_audio_processors/format_types/LV2_SDK/sord"
-@@ -204,8 +206,10 @@ add_library( ${BINARY_NAME}
+@@ -204,8 +209,10 @@ add_library( ${BINARY_NAME}
      "../../Projucer/JuceLibraryCode/include_juce_opengl.cpp"
      "../../Projucer/JuceLibraryCode/JuceHeader.h"
      "../../Projucer/JuceLibraryCode/UnityBuild.cpp"
@@ -45,7 +52,7 @@ index 21b1f0ec..550282de 100644
  set_source_files_properties("../../Projucer/JuceLibraryCode/AppConfig.h" PROPERTIES HEADER_FILE_ONLY TRUE)
  set_source_files_properties("../../Projucer/JuceLibraryCode/BinaryData.h" PROPERTIES HEADER_FILE_ONLY TRUE)
  set_source_files_properties("../../Projucer/JuceLibraryCode/JuceHeader.h" PROPERTIES HEADER_FILE_ONLY TRUE)
-@@ -225,11 +229,20 @@ find_library(android "android")
+@@ -225,11 +232,20 @@ find_library(android "android")
  find_library(glesv3 "GLESv3")
  find_library(egl "EGL")
  
