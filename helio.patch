@@ -228,6 +228,17 @@ index 57d1ff1d..3ddb1a8f 100644
 +    </provider>
 +</application>
  </manifest>
+diff --git a/Projects/Android/app/src/main/res/values/string.xml b/Projects/Android/app/src/main/res/values/string.xml
+index ff2d0618..7c2dbca7 100644
+--- a/Projects/Android/app/src/main/res/values/string.xml
++++ b/Projects/Android/app/src/main/res/values/string.xml
+@@ -1,5 +1,5 @@
+ <?xml version="1.0" encoding="utf-8"?>
+ 
+ <resources>
+-  <string name="app_name">Helio</string>
++  <string name="app_name">AAP Helio</string>
+ </resources>
 diff --git a/Projects/Android/build.gradle b/Projects/Android/build.gradle
 index 0fe5b4aa..a61d4e1e 100644
 --- a/Projects/Android/build.gradle
