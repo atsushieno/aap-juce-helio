@@ -74,17 +74,17 @@ index 21b1f0ec..4cc9e2c0 100644
 +    androidaudioplugin::androidaudioplugin
  )
 diff --git a/Projects/Android/app/build.gradle b/Projects/Android/app/build.gradle
-index cd1afcaf..f233adbf 100644
+index cd1afcaf..94e95bdd 100644
 --- a/Projects/Android/app/build.gradle
 +++ b/Projects/Android/app/build.gradle
-@@ -1,31 +1,26 @@
+@@ -1,31 +1,29 @@
  apply plugin: 'com.android.application'
 +apply plugin: 'kotlin-android'
  
  android {
 -    compileSdkVersion 28
 +    namespace "org.androidaudioplugin.ports.juce.helio"
-+    compileSdk = 34
++    compileSdk = libs.versions.android.compileSdk.get().toInteger()
      externalNativeBuild {
          cmake {
 +            version libs.versions.cmake.get()
@@ -106,8 +106,11 @@ index cd1afcaf..f233adbf 100644
 -        minSdkVersion    21
 -        targetSdkVersion 28
 +        applicationId "org.androidaudioplugin.ports.juce.helio"
-+        minSdkVersion    29
-+        targetSdkVersion 34
++        minSdkVersion    libs.versions.android.minSdk.get().toInteger()
++        ndk {
++            // should we make it customizable? We skip others just to reduce build time.
++            abiFilters "x86_64", "arm64-v8a"
++        }
          externalNativeBuild {
              cmake {
 -                arguments "-DANDROID_TOOLCHAIN=clang", "-DANDROID_PLATFORM=android-21", "-DANDROID_STL=c++_static", "-DANDROID_CPP_FEATURES=exceptions rtti", "-DANDROID_ARM_MODE=arm", "-DANDROID_ARM_NEON=TRUE", "-DCMAKE_CXX_STANDARD=14", "-DCMAKE_CXX_EXTENSIONS=OFF"
@@ -118,7 +121,7 @@ index cd1afcaf..f233adbf 100644
      }
  
      buildTypes {
-@@ -33,22 +28,17 @@ android {
+@@ -33,22 +31,17 @@ android {
               initWith debug
               debuggable    true
               jniDebuggable true
@@ -141,7 +144,7 @@ index cd1afcaf..f233adbf 100644
              externalNativeBuild {
                  cmake {
                      arguments "-DJUCE_BUILD_CONFIGURATION=DEBUG", "-DCMAKE_CXX_FLAGS_DEBUG=-O0", "-DCMAKE_C_FLAGS_DEBUG=-O0"
-@@ -58,9 +48,6 @@ android {
+@@ -58,9 +51,6 @@ android {
              dimension "default"
         }
          release_ {
@@ -151,7 +154,7 @@ index cd1afcaf..f233adbf 100644
              externalNativeBuild {
                  cmake {
                      arguments "-DJUCE_BUILD_CONFIGURATION=RELEASE", "-DCMAKE_CXX_FLAGS_RELEASE=-O3", "-DCMAKE_C_FLAGS_RELEASE=-O3"
-@@ -86,7 +73,8 @@ android {
+@@ -86,7 +76,8 @@ android {
      sourceSets {
          main.java.srcDirs +=
              ["../../../ThirdParty/JUCE/modules/juce_core/native/javacore/init",
@@ -161,7 +164,7 @@ index cd1afcaf..f233adbf 100644
  
          main.res.srcDirs +=
              []
-@@ -96,9 +84,17 @@ android {
+@@ -96,9 +87,17 @@ android {
      }
  
      dependencies {
@@ -226,44 +229,80 @@ index 57d1ff1d..3ddb1a8f 100644
 +</application>
  </manifest>
 diff --git a/Projects/Android/build.gradle b/Projects/Android/build.gradle
-index 0fe5b4aa..6800c846 100644
+index 0fe5b4aa..a61d4e1e 100644
 --- a/Projects/Android/build.gradle
 +++ b/Projects/Android/build.gradle
-@@ -1,16 +1,19 @@
- buildscript {
-    repositories {
-        google()
+@@ -1,16 +1,17 @@
+-buildscript {
+-   repositories {
+-       google()
 -       jcenter()
-+       mavenCentral()
-+       mavenLocal()
-    }
-    dependencies {
+-   }
+-   dependencies {
 -       classpath 'com.android.tools.build:gradle:4.0.0'
-+       classpath libs.tools.build.gradle
-+       classpath libs.kotlin.gradle.plugin
-    }
+-   }
++plugins {
++    alias(libs.plugins.android.application) apply false
++    alias(libs.plugins.android.library) apply false
++    alias(libs.plugins.kotlin.android) apply false
++    alias(libs.plugins.compose.compiler) apply false
++    alias(libs.plugins.dokka) apply false
++    id ("maven-publish")
  }
  
  allprojects {
-    repositories {
-        google()
+-   repositories {
+-       google()
 -       jcenter()
-+       mavenCentral()
-+       mavenLocal()
-    }
+-   }
++    ext.enable_asan = false
++    repositories {
++        mavenLocal()
++        mavenCentral()
++        google()
++    }
  }
+diff --git a/Projects/Android/gradle/wrapper/gradle-wrapper.jar b/Projects/Android/gradle/wrapper/gradle-wrapper.jar
+index 13372aef..e6441136 100644
+Binary files a/Projects/Android/gradle/wrapper/gradle-wrapper.jar and b/Projects/Android/gradle/wrapper/gradle-wrapper.jar differ
 diff --git a/Projects/Android/gradle/wrapper/gradle-wrapper.properties b/Projects/Android/gradle/wrapper/gradle-wrapper.properties
-index 49479605..17f1f703 100644
+index 49479605..e2847c82 100644
 --- a/Projects/Android/gradle/wrapper/gradle-wrapper.properties
 +++ b/Projects/Android/gradle/wrapper/gradle-wrapper.properties
-@@ -1 +1,5 @@
+@@ -1 +1,7 @@
 -distributionUrl=https\://services.gradle.org/distributions/gradle-6.1.1-all.zip
 \ No newline at end of file
 +distributionBase=GRADLE_USER_HOME
-+distributionUrl=https\://services.gradle.org/distributions/gradle-8.5-bin.zip
 +distributionPath=wrapper/dists
-+zipStorePath=wrapper/dists
++distributionUrl=https\://services.gradle.org/distributions/gradle-8.11.1-bin.zip
++networkTimeout=10000
++validateDistributionUrl=true
 +zipStoreBase=GRADLE_USER_HOME
++zipStorePath=wrapper/dists
+diff --git a/Projects/Android/settings.gradle b/Projects/Android/settings.gradle
+index 6b14f4e7..4bc274a8 100644
+--- a/Projects/Android/settings.gradle
++++ b/Projects/Android/settings.gradle
+@@ -1,2 +1,16 @@
+-rootProject.name = 'Helio'
+-include ':app'
+\ No newline at end of file
++pluginManagement {
++    repositories {
++        google()
++        gradlePluginPortal()
++        mavenCentral()
++    }
++}
++dependencyResolutionManagement {
++    repositories {
++        mavenLocal()
++        google()
++        mavenCentral()
++    }
++}
++rootProject.name='helio-workstation'
++include ':app'
 diff --git a/Projects/Projucer/Helio Workstation.jucer b/Projects/Projucer/Helio Workstation.jucer
 index 043839b4..9a8764c2 100644
 --- a/Projects/Projucer/Helio Workstation.jucer	

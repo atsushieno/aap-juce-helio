@@ -15,9 +15,13 @@ build-aap-core:
 	cd $(AAP_DIR) && ./gradlew build publishToMavenLocal
 
 build-helio: patch-helio
+	cp $(AAP_JUCE_DIR)/settings-head.gradle $(ANDROID_APP_DIR)/settings.gradle
+	echo "rootProject.name='helio-workstation'" >> $(ANDROID_APP_DIR)/settings.gradle
+	echo "include ':app'" >> $(ANDROID_APP_DIR)/settings.gradle
 	cp $(AAP_JUCE_DIR)/projuce-app-template/gradle.properties $(ANDROID_APP_DIR)/gradle.properties
-	cp $(AAP_JUCE_DIR)/projuce-app-template/gradle-wrapper.properties $(ANDROID_APP_DIR)/gradle/wrapper/gradle-wrapper.properties
+	cp $(AAP_JUCE_DIR)/projuce-app-template/gradle-wrapper.* $(ANDROID_APP_DIR)/gradle/wrapper/
 	cp $(AAP_JUCE_DIR)/projuce-app-template/libs.versions.toml $(ANDROID_APP_DIR)/gradle/libs.versions.toml
+	cp $(AAP_JUCE_DIR)/projuce-app-template/build.gradle $(ANDROID_APP_DIR)/
 	cd $(ANDROID_APP_DIR) && ./gradlew build bundle
 
 patch-helio: .stamp-helio
