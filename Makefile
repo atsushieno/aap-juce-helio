@@ -41,5 +41,5 @@ $(JUCE_DIR)/.stamp-juce:
 
 dist:
 	mkdir -p dist
-	cp ./external/helio-workstation/Projects/Android/app/build/outputs/apk/debug_/debug/*.apk dist/
-	cp ./external/helio-workstation/Projects/Android/app/build/outputs/bundle/release_Release/*.aab dist/
+	cp ./external/helio-workstation/Projects/Android/app/build/outputs/apk/debug/*.apk dist/
+	cp ./external/helio-workstation/Projects/Android/app/build/outputs/bundle/*.aab dist/
