@@ -364,9 +364,3 @@ index 4ec18f80..816b0677 100644
      enum
      {
          startAddrsOffset,
-diff --git a/ThirdParty/JUCE b/ThirdParty/JUCE
---- a/ThirdParty/JUCE
-+++ b/ThirdParty/JUCE
-@@ -1 +1 @@
--Subproject commit 765814eab027d07171eabf2a5cd4fafd25cd2cdb
-+Subproject commit 765814eab027d07171eabf2a5cd4fafd25cd2cdb-dirty
