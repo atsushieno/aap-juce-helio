@@ -1,8 +1,8 @@
 
 PWD=$(shell pwd)
 AAP_DIR=$(shell pwd)/external/aap-core
-APP_TOPDIR=external/helio-workstation
-ANDROID_APP_DIR=external/helio-workstation/Projects/Android
+APP_TOPDIR=external/helio-sequencer
+ANDROID_APP_DIR=external/helio-sequencer/Projects/Android
 JUCE_ORIGINAL=https://github.com/juce-framework/JUCE.git
 AAP_JUCE_DIR=$(shell pwd)/external/aap-juce
 JUCE_DIR=$(APP_TOPDIR)/ThirdParty/JUCE
@@ -16,7 +16,7 @@ build-aap-core:
 
 build-helio: patch-helio
 	cp $(AAP_JUCE_DIR)/settings-head.gradle $(ANDROID_APP_DIR)/settings.gradle
-	echo "rootProject.name='helio-workstation'" >> $(ANDROID_APP_DIR)/settings.gradle
+	echo "rootProject.name='helio-sequencer'" >> $(ANDROID_APP_DIR)/settings.gradle
 	echo "include ':app'" >> $(ANDROID_APP_DIR)/settings.gradle
 	cp $(AAP_JUCE_DIR)/projuce-app-template/gradle.properties $(ANDROID_APP_DIR)/gradle.properties
 	cp $(AAP_JUCE_DIR)/projuce-app-template/gradle-wrapper.* $(ANDROID_APP_DIR)/gradle/wrapper/
@@ -41,5 +41,5 @@ $(JUCE_DIR)/.stamp-juce:
 
 dist:
 	mkdir -p dist
-	cp ./external/helio-workstation/Projects/Android/app/build/outputs/apk/debug/*.apk dist/
-	cp ./external/helio-workstation/Projects/Android/app/build/outputs/bundle/release/*.aab dist/
+	cp ./external/helio-sequencer/Projects/Android/app/build/outputs/apk/debug/*.apk dist/
+	cp ./external/helio-sequencer/Projects/Android/app/build/outputs/bundle/release/*.aab dist/

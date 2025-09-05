@@ -330,7 +330,7 @@ index 6b14f4e7..4bc274a8 100644
 +        mavenCentral()
 +    }
 +}
-+rootProject.name='helio-workstation'
++rootProject.name='helio-sequencer'
 +include ':app'
 diff --git a/Source/Core/Audio/AudioCore.cpp b/Source/Core/Audio/AudioCore.cpp
 index 1286f78f..691c8a13 100644

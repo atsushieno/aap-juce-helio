@@ -1,6 +1,6 @@
 ## What is this?
 
-It is an experimental [aap-juce](https://github.com/atsushieno/aap-juce) integration into [Helio Workstation](https://github.com/helio-fm/helio-workstation).
+It is an experimental [aap-juce](https://github.com/atsushieno/aap-juce) integration into [Helio Workstation](https://github.com/helio-fm/helio-sequencer).
 
 Helio Workstation is a JUCE-based DAW, and aap-juce-helio adopts aap-juce hosting implementation. Most importantly, Helio Workstation supports Android to some extent, therefore the changes in this build is very trivial.
 
@@ -9,7 +9,7 @@ Yet, JUCE itself has various bugs in Android Dalvik integration to get AAP worki
 
 ## Current status:
 
-See helio-workstation on Android playing LV2 String Machine in action: https://imgur.com/a/Hh91JAI (audio quality is horrible yet)
+See helio-sequencer on Android playing LV2 String Machine in action: https://imgur.com/a/Hh91JAI (audio quality is horrible yet)
 
 Some highlight screenshots from AAP 0.7.5-pre:
 
