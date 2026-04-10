@@ -1,8 +1,8 @@
 ## What is this?
 
-It is an experimental [aap-juce](https://github.com/atsushieno/aap-juce) integration into [Helio Workstation](https://github.com/helio-fm/helio-sequencer).
+It is an experimental [aap-juce](https://github.com/atsushieno/aap-juce) integration into [Helio Sequencer](https://github.com/helio-fm/helio-sequencer).
 
-Helio Workstation is a JUCE-based DAW, and aap-juce-helio adopts aap-juce hosting implementation. Most importantly, Helio Workstation supports Android to some extent, therefore the changes in this build is very trivial.
+Helio Sequencer is a JUCE-based DAW, and aap-juce-helio adopts aap-juce hosting implementation. Most importantly, Helio Sequencer supports Android to some extent, therefore the changes in this build is very trivial.
 
 Yet, JUCE itself has various bugs in Android Dalvik integration to get AAP working enough, and we still need handful of JUCE patches.
 
@@ -22,7 +22,7 @@ Some highlight screenshots from AAP 0.7.5-pre:
 
 ## Licensing notice
 
-Helio Workstation is released under the GPLv3 license.
+Helio Sequencer is released under the GPLv3 license.
 
 aap-juce is released under the GPLv3 license.
 
