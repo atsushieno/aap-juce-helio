@@ -1,41 +1,48 @@
 diff --git a/Projects/Android/app/CMakeLists.txt b/Projects/Android/app/CMakeLists.txt
-index e9db491b..363d0a57 100644
+index 665e1e46..67e3a161 100644
 --- a/Projects/Android/app/CMakeLists.txt
 +++ b/Projects/Android/app/CMakeLists.txt
-@@ -11,10 +11,11 @@ set_source_files_properties("${ANDROID_NDK}/sources/android/cpufeatures/cpu-feat
- add_definitions("-DJUCE_ANDROID=1" "-DJUCE_ANDROID_API_VERSION=21" "-DJUCE_ANDROID_GL_ES_VERSION_3_0=1" "-DJUCER_ANDROIDSTUDIO_6AB8437A=1" "-DJUCE_APP_VERSION=3.10" "-DJUCE_APP_VERSION_HEX=0x30a00")
+@@ -3,23 +3,29 @@
+ 
+ cmake_minimum_required(VERSION 3.4.1)
+ 
++project("helio-sequencer")
++
+ set(BINARY_NAME "juce_jni")
+ 
+ add_library("cpufeatures" STATIC "${ANDROID_NDK}/sources/android/cpufeatures/cpu-features.c")
+ set_source_files_properties("${ANDROID_NDK}/sources/android/cpufeatures/cpu-features.c" PROPERTIES COMPILE_FLAGS "-Wno-sign-conversion -Wno-gnu-statement-expression")
+ 
+-add_definitions("-DJUCE_ANDROID=1" "-DJUCE_ANDROID_API_VERSION=21" "-DJUCE_ANDROID_GL_ES_VERSION_3_0=1" "-DJUCER_ANDROIDSTUDIO_6AB8437A=1" "-DJUCE_APP_VERSION=3.15" "-DJUCE_APP_VERSION_HEX=0x30f00")
++add_definitions("-DJUCE_ANDROID=1" "-DJUCE_ANDROID_API_VERSION=29" "-DJUCE_ANDROID_GL_ES_VERSION_3_0=1" "-DJUCER_ANDROIDSTUDIO_6AB8437A=1" "-DJUCE_APP_VERSION=3.15" "-DJUCE_APP_VERSION_HEX=0x30f00")
++add_definitions("-DJUCE_USE_ANDROID_OBOE_STABILIZED_CALLBACK=1" "-DJUCE_DONT_AUTO_OPEN_MIDI_DEVICES_ON_MOBILE=1")
++add_subdirectory("../../../ThirdParty/JUCE/modules/juce_audio_devices/native/oboe" "./oboe")
  
  include_directories( AFTER
--    "../../../ThirdParty/JUCE/modules/juce_audio_processors/format_types/VST3_SDK"
-+    #"../../../ThirdParty/JUCE/modules/juce_audio_processors/format_types/VST3_SDK"
+     "../../../ThirdParty/JUCE/modules/juce_audio_processors/format_types/VST3_SDK"
      "../../Projucer/JuceLibraryCode"
      "../../../ThirdParty/JUCE/modules"
++    "../../../../aap-juce/aap-modules"
++    "../../../ThirdParty/JUCE/modules/juce_audio_devices/native/oboe/include"
      "${ANDROID_NDK}/sources/android/cpufeatures"
-+    "../../../../aap-juce/modules"
  )
  
  enable_language(ASM)
-@@ -24,7 +25,7 @@ if(JUCE_BUILD_CONFIGURATION MATCHES "DEBUG")
+ 
+-if(JUCE_BUILD_CONFIGURATION MATCHES "DEBUG")
++if(true)#JUCE_BUILD_CONFIGURATION MATCHES "DEBUG")
+     add_definitions("-DJUCER_ANDROIDSTUDIO_6AB8437A=1" "-DJUCE_APP_VERSION=3.15" "-DJUCE_APP_VERSION_HEX=0x30f00" "-DDEBUG=1" "-D_DEBUG=1")
      include_directories( AFTER
          "../../Projucer/JuceLibraryCode"
-         "../../../ThirdParty/JUCE/modules"
--        "../../../ThirdParty/JUCE/modules/juce_audio_processors/format_types/VST3_SDK"
-+        #"../../../ThirdParty/JUCE/modules/juce_audio_processors/format_types/VST3_SDK"
-         "../../../ThirdParty/ASIO/common"
-         "../../../Source"
-         "../../../Source/Core"
-@@ -188,8 +189,10 @@ add_library( ${BINARY_NAME}
+@@ -196,6 +202,7 @@ add_library( ${BINARY_NAME}
      "../../Projucer/JuceLibraryCode/include_juce_opengl.cpp"
      "../../Projucer/JuceLibraryCode/JuceHeader.h"
      "../../Projucer/JuceLibraryCode/UnityBuild.cpp"
 +    "../../../../../juceaap.cpp"
  )
  
-+
  set_source_files_properties("../../Projucer/JuceLibraryCode/AppConfig.h" PROPERTIES HEADER_FILE_ONLY TRUE)
- set_source_files_properties("../../Projucer/JuceLibraryCode/BinaryData.h" PROPERTIES HEADER_FILE_ONLY TRUE)
- set_source_files_properties("../../Projucer/JuceLibraryCode/JuceHeader.h" PROPERTIES HEADER_FILE_ONLY TRUE)
-@@ -209,6 +212,13 @@ find_library(android "android")
+@@ -217,11 +224,20 @@ find_library(android "android")
  find_library(glesv3 "GLESv3")
  find_library(egl "EGL")
  
@@ -49,23 +56,32 @@ index e9db491b..363d0a57 100644
  target_link_libraries( ${BINARY_NAME}
  
      ${log}
-@@ -216,4 +226,5 @@ target_link_libraries( ${BINARY_NAME}
+     ${android}
      ${glesv3}
      ${egl}
++    oboe
      "cpufeatures"
 +    androidaudioplugin::androidaudioplugin
  )
 diff --git a/Projects/Android/app/build.gradle b/Projects/Android/app/build.gradle
-index cd1afcaf..be543ce9 100644
+index cd1afcaf..ab4f86ad 100644
 --- a/Projects/Android/app/build.gradle
 +++ b/Projects/Android/app/build.gradle
-@@ -1,31 +1,24 @@
- apply plugin: 'com.android.application'
+@@ -1,104 +1,58 @@
+-apply plugin: 'com.android.application'
++plugins {
++    id 'com.android.application'
++    id 'kotlin-android'
++}
++
++kotlin {
++    jvmToolchain(11)
++}
  
  android {
 -    compileSdkVersion 28
-+    namespace "fm.helio"
-+    compileSdk = 33
++    namespace "org.androidaudioplugin.ports.juce.helio"
++    compileSdkVersion libs.versions.android.compileSdk.get().toInteger()
      externalNativeBuild {
          cmake {
              path "CMakeLists.txt"
@@ -82,452 +98,304 @@ index cd1afcaf..be543ce9 100644
 -    }
  
      defaultConfig {
-         applicationId "fm.helio"
+-        applicationId "fm.helio"
 -        minSdkVersion    21
 -        targetSdkVersion 28
-+        minSdkVersion    29
-+        targetSdkVersion 33
++        applicationId "org.androidaudioplugin.ports.juce.helio"
++        minSdkVersion    libs.versions.android.minSdk.get().toInteger()
++        ndk {
++            // should we make it customizable? We skip others just to reduce build time.
++            abiFilters "x86_64", "arm64-v8a"
++        }
          externalNativeBuild {
              cmake {
 -                arguments "-DANDROID_TOOLCHAIN=clang", "-DANDROID_PLATFORM=android-21", "-DANDROID_STL=c++_static", "-DANDROID_CPP_FEATURES=exceptions rtti", "-DANDROID_ARM_MODE=arm", "-DANDROID_ARM_NEON=TRUE", "-DCMAKE_CXX_STANDARD=14", "-DCMAKE_CXX_EXTENSIONS=OFF"
-+                arguments "-DCMAKE_BUILD_TYPE=RelWithDebInfo", "-DANDROID_TOOLCHAIN=clang", "-DANDROID_PLATFORM=android-21", "-DANDROID_STL=c++_shared", "-DANDROID_CPP_FEATURES=exceptions rtti", "-DANDROID_ARM_MODE=arm", "-DANDROID_ARM_NEON=TRUE", "-DCMAKE_CXX_STANDARD=17", "-DCMAKE_CXX_EXTENSIONS=OFF"
+-            }
+-        }
+-    }
+-
+-    buildTypes {
+-         debug {
+-             initWith debug
+-             debuggable    true
+-             jniDebuggable true
+-             signingConfig signingConfigs.juceSigning
+-         }
+-         release {
+-             initWith release
+-             debuggable    false
+-             jniDebuggable false
+-             signingConfig signingConfigs.juceSigning
+-         }
+-    }
+-
+-    flavorDimensions "default"
+-    productFlavors {
+-        debug_ {
+-            ndk {
+-                abiFilters "armeabi-v7a", "arm64-v8a"
+-            }
+-            externalNativeBuild {
+-                cmake {
+-                    arguments "-DJUCE_BUILD_CONFIGURATION=DEBUG", "-DCMAKE_CXX_FLAGS_DEBUG=-O0", "-DCMAKE_C_FLAGS_DEBUG=-O0"
+-                }
+-            }
+-
+-            dimension "default"
+-       }
+-        release_ {
+-            ndk {
+-                abiFilters "armeabi-v7a", "arm64-v8a"
++                arguments "-DCMAKE_BUILD_TYPE=RelWithDebInfo", "-DANDROID_TOOLCHAIN=clang", "-DANDROID_PLATFORM=android-29", "-DANDROID_STL=c++_shared", "-DANDROID_CPP_FEATURES=exceptions rtti", "-DANDROID_ARM_MODE=arm", "-DANDROID_ARM_NEON=TRUE", "-DCMAKE_CXX_STANDARD=20", "-DCMAKE_CXX_EXTENSIONS=OFF"
              }
+-            externalNativeBuild {
+-                cmake {
+-                    arguments "-DJUCE_BUILD_CONFIGURATION=RELEASE", "-DCMAKE_CXX_FLAGS_RELEASE=-O3", "-DCMAKE_C_FLAGS_RELEASE=-O3"
+-                }
+-            }
+-
+-            dimension "default"
+-       }
+-    }
+-
+-    variantFilter { variant ->
+-        def names = variant.flavors*.name
+-        if (names.contains ("debug_")
+-              && variant.buildType.name != "debug") {
+-            setIgnore(true)
+-        }
+-        if (names.contains ("release_")
+-              && variant.buildType.name != "release") {
+-            setIgnore(true)
          }
 +        proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
      }
  
-     buildTypes {
-@@ -33,22 +26,17 @@ android {
-              initWith debug
-              debuggable    true
-              jniDebuggable true
--             signingConfig signingConfigs.juceSigning
-          }
-          release {
-              initWith release
-              debuggable    false
-              jniDebuggable false
--             signingConfig signingConfigs.juceSigning
-          }
+     sourceSets {
+         main.java.srcDirs +=
+             ["../../../ThirdParty/JUCE/modules/juce_core/native/javacore/init",
+-             "../../../ThirdParty/JUCE/modules/juce_core/native/javacore/app"]
++             "../../../ThirdParty/JUCE/modules/juce_core/native/javacore/app",
++             "../../../../aap-juce/java"]
+ 
+         main.res.srcDirs +=
+             []
      }
  
-     flavorDimensions "default"
-     productFlavors {
-         debug_ {
--            ndk {
--                abiFilters "armeabi-v7a", "arm64-v8a"
--            }
-             externalNativeBuild {
-                 cmake {
-                     arguments "-DJUCE_BUILD_CONFIGURATION=DEBUG", "-DCMAKE_CXX_FLAGS_DEBUG=-O0", "-DCMAKE_C_FLAGS_DEBUG=-O0"
-@@ -58,9 +46,6 @@ android {
-             dimension "default"
-        }
-         release_ {
--            ndk {
--                abiFilters "armeabi-v7a", "arm64-v8a"
--            }
-             externalNativeBuild {
-                 cmake {
-                     arguments "-DJUCE_BUILD_CONFIGURATION=RELEASE", "-DCMAKE_CXX_FLAGS_RELEASE=-O3", "-DCMAKE_C_FLAGS_RELEASE=-O3"
-@@ -96,9 +81,15 @@ android {
-     }
- 
-     dependencies {
-+        implementation 'androidx.startup:startup-runtime:1.1.1'
-+        implementation 'org.androidaudioplugin:androidaudioplugin:0.7.5-pre'
-+    }
-+
+-    repositories {
 +    buildFeatures {
 +        prefab true
      }
  
+     dependencies {
++        implementation libs.startup.runtime
++        implementation libs.aap.core
++        implementation libs.aap.ui.compose
++        implementation libs.aap.ui.web
+     }
+ 
 -ndkVersion "21.3.6528147"
-+ndkVersion "25.1.8937393"
++ndkVersion libs.versions.ndk.get()
  
  }
  
-diff --git a/Projects/Android/app/src/main/AndroidManifest.xml b/Projects/Android/app/src/main/AndroidManifest.xml
-index f6967cb9..dca70122 100644
---- a/Projects/Android/app/src/main/AndroidManifest.xml
-+++ b/Projects/Android/app/src/main/AndroidManifest.xml
-@@ -1,11 +1,18 @@
+diff --git a/Projects/Android/app/src/debug/res/values/string.xml b/Projects/Android/app/src/debug/res/values/string.xml
+index ff2d0618..7c2dbca7 100644
+--- a/Projects/Android/app/src/debug/res/values/string.xml
++++ b/Projects/Android/app/src/debug/res/values/string.xml
+@@ -1,5 +1,5 @@
  <?xml version="1.0" encoding="utf-8"?>
  
--<manifest xmlns:android="http://schemas.android.com/apk/res/android" android:versionCode="310" android:versionName="3.10"
+ <resources>
+-  <string name="app_name">Helio</string>
++  <string name="app_name">AAP Helio</string>
+ </resources>
+diff --git a/Projects/Android/app/src/main/AndroidManifest.xml b/Projects/Android/app/src/main/AndroidManifest.xml
+index 89f045a2..0398c350 100644
+--- a/Projects/Android/app/src/main/AndroidManifest.xml
++++ b/Projects/Android/app/src/main/AndroidManifest.xml
+@@ -1,10 +1,9 @@
+ <?xml version="1.0" encoding="utf-8"?>
+ 
+ <manifest xmlns:android="http://schemas.android.com/apk/res/android" android:versionCode="315" android:versionName="3.15"
 -          package="fm.helio">
-+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-+    xmlns:tools="http://schemas.android.com/tools"
-+    android:versionCode="310" android:versionName="3.10">
-+  <queries>
-+    <intent>
-+      <action android:name="org.androidaudioplugin.AudioPluginService.V2" />
-+    </intent>
-+  </queries>
++          xmlns:tools="http://schemas.android.com/tools">
    <supports-screens android:smallScreens="true" android:normalScreens="true" android:largeScreens="true" android:anyDensity="true"
                      android:xlargeScreens="true"/>
-   <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+-  <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
-+  <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
-   <uses-permission android:name="android.permission.BLUETOOTH"/>
-@@ -14,11 +21,19 @@
-   <application android:label="@string/app_name" android:name="com.rmsl.juce.JuceApp" android:theme="@android:style/Theme.Material.NoActionBar.Fullscreen"
-                android:icon="@drawable/icon" android:hardwareAccelerated="false">
-     <activity android:name="android.app.Activity" android:label="@string/app_name" android:configChanges="keyboardHidden|orientation|screenSize"
--              android:screenOrientation="userLandscape" android:launchMode="singleTask" android:hardwareAccelerated="true">
-+              android:screenOrientation="userLandscape" android:launchMode="singleTask" android:hardwareAccelerated="true" android:exported="true">
-       <intent-filter>
-         <action android:name="android.intent.action.MAIN"/>
+@@ -20,5 +19,13 @@
          <category android:name="android.intent.category.LAUNCHER"/>
        </intent-filter>
      </activity>
 -  </application>
-+    <provider android:name="androidx.startup.InitializationProvider"
-+        android:authorities="${applicationId}.juce_app_initializer"
-+        android:exported="false"
-+        tools:node="merge"
-+        tools:replace="android:authorities">
-+      <meta-data android:name="org.androidaudioplugin.hosting.AudioPluginClientInitializer" android:value="androidx.startup"/>
-+      <meta-data android:name="org.androidaudioplugin.juce.JuceAppInitializer" android:value="androidx.startup" />
-+    </provider>
-+</application>
- </manifest>
+-</manifest>
++      <provider android:name="androidx.startup.InitializationProvider"
++          android:authorities="${applicationId}.juce_app_initializer"
++          android:exported="false"
++          tools:node="merge"
++          tools:replace="android:authorities">
++        <meta-data android:name="org.androidaudioplugin.hosting.AudioPluginClientInitializer" android:value="androidx.startup"/>
++        <meta-data android:name="org.androidaudioplugin.juce.JuceAppInitializer" android:value="androidx.startup" />
++      </provider>
++    </application>
++  </manifest>
+diff --git a/Projects/Android/app/src/main/res/values/string.xml b/Projects/Android/app/src/main/res/values/string.xml
+index ff2d0618..7c2dbca7 100644
+--- a/Projects/Android/app/src/main/res/values/string.xml
++++ b/Projects/Android/app/src/main/res/values/string.xml
+@@ -1,5 +1,5 @@
+ <?xml version="1.0" encoding="utf-8"?>
+ 
+ <resources>
+-  <string name="app_name">Helio</string>
++  <string name="app_name">AAP Helio</string>
+ </resources>
+diff --git a/Projects/Android/app/src/release/res/values/string.xml b/Projects/Android/app/src/release/res/values/string.xml
+index ff2d0618..7c2dbca7 100644
+--- a/Projects/Android/app/src/release/res/values/string.xml
++++ b/Projects/Android/app/src/release/res/values/string.xml
+@@ -1,5 +1,5 @@
+ <?xml version="1.0" encoding="utf-8"?>
+ 
+ <resources>
+-  <string name="app_name">Helio</string>
++  <string name="app_name">AAP Helio</string>
+ </resources>
 diff --git a/Projects/Android/build.gradle b/Projects/Android/build.gradle
-index 0fe5b4aa..797a11ea 100644
+index 0fe5b4aa..a61d4e1e 100644
 --- a/Projects/Android/build.gradle
 +++ b/Projects/Android/build.gradle
-@@ -1,16 +1,18 @@
- buildscript {
-    repositories {
-        google()
+@@ -1,16 +1,17 @@
+-buildscript {
+-   repositories {
+-       google()
 -       jcenter()
-+       mavenCentral()
-+       mavenLocal()
-    }
-    dependencies {
+-   }
+-   dependencies {
 -       classpath 'com.android.tools.build:gradle:4.0.0'
-+       classpath 'com.android.tools.build:gradle:7.3.1'
-    }
+-   }
++plugins {
++    alias(libs.plugins.android.application) apply false
++    alias(libs.plugins.android.library) apply false
++    alias(libs.plugins.kotlin.android) apply false
++    alias(libs.plugins.compose.compiler) apply false
++    alias(libs.plugins.dokka) apply false
++    id ("maven-publish")
  }
  
  allprojects {
-    repositories {
-        google()
+-   repositories {
+-       google()
 -       jcenter()
-+       mavenCentral()
-+       mavenLocal()
-    }
+-   }
++    ext.enable_asan = false
++    repositories {
++        mavenLocal()
++        mavenCentral()
++        google()
++    }
  }
+diff --git a/Projects/Android/gradle/wrapper/gradle-wrapper.jar b/Projects/Android/gradle/wrapper/gradle-wrapper.jar
+index 13372aef..9bbc975c 100644
+Binary files a/Projects/Android/gradle/wrapper/gradle-wrapper.jar and b/Projects/Android/gradle/wrapper/gradle-wrapper.jar differ
 diff --git a/Projects/Android/gradle/wrapper/gradle-wrapper.properties b/Projects/Android/gradle/wrapper/gradle-wrapper.properties
-index 49479605..f26fd695 100644
+index 49479605..37f853b1 100644
 --- a/Projects/Android/gradle/wrapper/gradle-wrapper.properties
 +++ b/Projects/Android/gradle/wrapper/gradle-wrapper.properties
-@@ -1 +1,5 @@
+@@ -1 +1,7 @@
 -distributionUrl=https\://services.gradle.org/distributions/gradle-6.1.1-all.zip
 \ No newline at end of file
 +distributionBase=GRADLE_USER_HOME
-+distributionUrl=https\://services.gradle.org/distributions/gradle-7.6-bin.zip
 +distributionPath=wrapper/dists
-+zipStorePath=wrapper/dists
++distributionUrl=https\://services.gradle.org/distributions/gradle-8.13-bin.zip
++networkTimeout=10000
++validateDistributionUrl=true
 +zipStoreBase=GRADLE_USER_HOME
++zipStorePath=wrapper/dists
+diff --git a/Projects/Android/settings.gradle b/Projects/Android/settings.gradle
+index 6b14f4e7..f7a161d5 100644
+--- a/Projects/Android/settings.gradle
++++ b/Projects/Android/settings.gradle
+@@ -1,2 +1,16 @@
+-rootProject.name = 'Helio'
+-include ':app'
+\ No newline at end of file
++pluginManagement {
++    repositories {
++        google()
++        gradlePluginPortal()
++        mavenCentral()
++    }
++}
++dependencyResolutionManagement {
++    repositories {
++        mavenLocal()
++        google()
++        mavenCentral()
++    }
++}
++rootProject.name='helio-sequencer'
++include ':app'
 diff --git a/Projects/Projucer/JuceLibraryCode/AppConfig.h b/Projects/Projucer/JuceLibraryCode/AppConfig.h
-index 159c5b51..898d583f 100644
+index 273f4bdb..44189fad 100644
 --- a/Projects/Projucer/JuceLibraryCode/AppConfig.h
 +++ b/Projects/Projucer/JuceLibraryCode/AppConfig.h
-@@ -134,11 +134,11 @@
- // juce_audio_processors flags:
- 
- #ifndef    JUCE_PLUGINHOST_VST
-- #define   JUCE_PLUGINHOST_VST 1
-+ #define   JUCE_PLUGINHOST_VST 0
+@@ -90,7 +90,7 @@
  #endif
  
- #ifndef    JUCE_PLUGINHOST_VST3
-- #define   JUCE_PLUGINHOST_VST3 1
-+ #define   JUCE_PLUGINHOST_VST3 0
+ #ifndef    JUCE_USE_ANDROID_OBOE
+- #define   JUCE_USE_ANDROID_OBOE 0
++ #define   JUCE_USE_ANDROID_OBOE 1
  #endif
  
- #ifndef    JUCE_PLUGINHOST_AU
-diff --git a/Projects/Projucer/JuceLibraryCode/JuceHeader.h b/Projects/Projucer/JuceLibraryCode/JuceHeader.h
-index 1e66e1fd..44c35164 100644
---- a/Projects/Projucer/JuceLibraryCode/JuceHeader.h
-+++ b/Projects/Projucer/JuceLibraryCode/JuceHeader.h
-@@ -34,7 +34,7 @@
-      using the latest version of the Projucer or, if you aren't using the Projucer to manage your project,
-      remove the JUCE_PROJUCER_VERSION define.
-  */
-- #error "This project was last saved using an outdated version of the Projucer! Re-save this project with the latest version to fix this error."
-+ //#error "This project was last saved using an outdated version of the Projucer! Re-save this project with the latest version to fix this error."
+ #ifndef    JUCE_USE_OBOE_STABILIZED_CALLBACK
+@@ -98,7 +98,7 @@
  #endif
  
- #if ! DONT_SET_USING_JUCE_NAMESPACE
+ #ifndef    JUCE_USE_ANDROID_OPENSLES
+- #define   JUCE_USE_ANDROID_OPENSLES 1
++ #define   JUCE_USE_ANDROID_OPENSLES 0
+ #endif
+ 
+ #ifndef    JUCE_DISABLE_AUDIO_MIXING_WITH_OTHER_APPS
 diff --git a/Source/Core/Audio/AudioCore.cpp b/Source/Core/Audio/AudioCore.cpp
-index 13c3bb38..0a7cbf98 100644
+index 1286f78f..691c8a13 100644
 --- a/Source/Core/Audio/AudioCore.cpp
 +++ b/Source/Core/Audio/AudioCore.cpp
-@@ -23,12 +23,17 @@
- #include "MetronomeSynthAudioPlugin.h"
+@@ -24,12 +24,14 @@
+ #include "SoundFontSynthAudioPlugin.h"
  #include "SerializationKeys.h"
  #include "AudioMonitor.h"
-+#include "aap/core/host/audio-plugin-host.h"
-+#include "juceaap_audio_processors/juceaap_audio_plugin_format.cpp"
-+
++#include "aap_audio_plugin_client/aap_audio_plugin_client.cpp"
  
  void AudioCore::initAudioFormats(AudioPluginFormatManager &formatManager)
  {
      formatManager.addDefaultFormats();
      formatManager.addFormat(new InternalIODevicesPluginFormat());
      formatManager.addFormat(new BuiltInSynthsPluginFormat());
-+    //aap::PluginClientSystem::getInstance()->getInstalledPlugins();
 +    formatManager.addFormat(new juceaap::AndroidAudioPluginFormat());
  }
  
  AudioCore::AudioCore()
-diff --git a/Source/Core/Audio/Instruments/Instrument.cpp b/Source/Core/Audio/Instruments/Instrument.cpp
-index 67857345..2abbef13 100644
---- a/Source/Core/Audio/Instruments/Instrument.cpp
-+++ b/Source/Core/Audio/Instruments/Instrument.cpp
-@@ -821,9 +821,12 @@ void Instrument::AudioCallback::setProcessor(AudioProcessor *const newOne)
-     }
- }
+diff --git a/Source/Core/Audio/BuiltIn/SoundFont/SoundFont2Sound.cpp b/Source/Core/Audio/BuiltIn/SoundFont/SoundFont2Sound.cpp
+index 4ec18f80..816b0677 100644
+--- a/Source/Core/Audio/BuiltIn/SoundFont/SoundFont2Sound.cpp
++++ b/Source/Core/Audio/BuiltIn/SoundFont/SoundFont2Sound.cpp
+@@ -479,6 +479,8 @@ struct SoundFont2Generator final
+     const char *name;
+     Type type;
  
--void Instrument::AudioCallback::audioDeviceIOCallback(const float** const inputChannelData,
--    const int numInputChannels, float **const outputChannelData,
--    const int numOutputChannels, const int numSamples)
-+void Instrument::AudioCallback::audioDeviceIOCallbackWithContext(const float* const* inputChannelData,
-+                                                      int numInputChannels,
-+                                                      float* const* outputChannelData,
-+                                                      int numOutputChannels,
-+                                                      int numSamples,
-+                                                      const AudioIODeviceCallbackContext& context)
- {
-     jassert(this->sampleRate > 0 && this->blockSize > 0);
- 
-diff --git a/Source/Core/Audio/Instruments/Instrument.h b/Source/Core/Audio/Instruments/Instrument.h
-index 9f3c4efd..6319cb9a 100644
---- a/Source/Core/Audio/Instruments/Instrument.h
-+++ b/Source/Core/Audio/Instruments/Instrument.h
-@@ -52,7 +52,7 @@ public:
-         void setProcessor(AudioProcessor *processor);
-         MidiMessageCollector &getMidiMessageCollector() noexcept { return messageCollector; }
- 
--        void audioDeviceIOCallback(const float **, int, float **, int, int) override;
-+        void audioDeviceIOCallbackWithContext(const float* const*, int, float* const*, int, int, const AudioIODeviceCallbackContext&) override;
-         void audioDeviceAboutToStart(AudioIODevice *) override;
-         void audioDeviceStopped() override;
-         void handleIncomingMidiMessage(MidiInput *, const MidiMessage&) override;
-diff --git a/Source/Core/Audio/Instruments/PluginScanner.cpp b/Source/Core/Audio/Instruments/PluginScanner.cpp
-index 062e9d8e..4770c0b7 100644
---- a/Source/Core/Audio/Instruments/PluginScanner.cpp
-+++ b/Source/Core/Audio/Instruments/PluginScanner.cpp
-@@ -110,7 +110,7 @@ void PluginScanner::runInitialScan()
- 
-     if (!this->isThreadRunning())
-     {
--        this->startThread(0);
-+        this->startThread(Thread::Priority::normal);
-     }
- 
-     // prepare search paths, prepare specific files to scan,
-@@ -159,7 +159,7 @@ void PluginScanner::scanFolderAndAddResults(const File &dir)
- 
-     if (!this->isThreadRunning())
-     {
--        this->startThread(0);
-+        this->startThread(Thread::Priority::normal);
-     }
- 
-     // prepare search paths and resume search thread
-diff --git a/Source/Core/Audio/Monitoring/AudioMonitor.cpp b/Source/Core/Audio/Monitoring/AudioMonitor.cpp
-index 0b059554..f1cf532c 100644
---- a/Source/Core/Audio/Monitoring/AudioMonitor.cpp
-+++ b/Source/Core/Audio/Monitoring/AudioMonitor.cpp
-@@ -74,8 +74,12 @@ void AudioMonitor::audioDeviceAboutToStart(AudioIODevice *device)
-     this->sampleRate = device->getCurrentSampleRate();
- }
- 
--void AudioMonitor::audioDeviceIOCallback(const float **inputChannelData, int numInputChannels,
--    float **outputChannelData, int numOutputChannels, int numSamples)
-+void AudioMonitor::audioDeviceIOCallbackWithContext(const float* const* inputChannelData,
-+                                         int numInputChannels,
-+                                         float* const* outputChannelData,
-+                                         int numOutputChannels,
-+                                         int numSamples,
-+                                         const AudioIODeviceCallbackContext& context)
- {
-     const int minNumChannels = jmin(AudioMonitor::numChannels, numOutputChannels);
-     
-diff --git a/Source/Core/Audio/Monitoring/AudioMonitor.h b/Source/Core/Audio/Monitoring/AudioMonitor.h
-index c696a564..f5fc79ed 100644
---- a/Source/Core/Audio/Monitoring/AudioMonitor.h
-+++ b/Source/Core/Audio/Monitoring/AudioMonitor.h
-@@ -30,8 +30,12 @@ public:
-     //===------------------------------------------------------------------===//
- 
-     void audioDeviceAboutToStart(AudioIODevice *device) override;
--    void audioDeviceIOCallback(const float **inputChannelData, int numInputChannels,
--        float **outputChannelData, int numOutputChannels, int numSamples) override;
-+    void audioDeviceIOCallbackWithContext(const float* const* inputChannelData,
-+                                          int numInputChannels,
-+                                          float* const* outputChannelData,
-+                                          int numOutputChannels,
-+                                          int numSamples,
-+                                          const AudioIODeviceCallbackContext& context) override;
-     void audioDeviceStopped() override {}
-     
-     //===------------------------------------------------------------------===//
-diff --git a/Source/Core/Audio/Transport/PlayerThread.cpp b/Source/Core/Audio/Transport/PlayerThread.cpp
-index 5d3e6a7b..511c6f27 100644
---- a/Source/Core/Audio/Transport/PlayerThread.cpp
-+++ b/Source/Core/Audio/Transport/PlayerThread.cpp
-@@ -36,7 +36,7 @@ void PlayerThread::startPlayback(Transport::PlaybackContext::Ptr context)
- {
-     this->context = context;
-     this->sequences = this->transport.getPlaybackCache();
--    this->startThread(10);
-+    this->startThread(Thread::Priority::highest);
- }
- 
- void PlayerThread::run()
-diff --git a/Source/Core/Audio/Transport/RendererThread.cpp b/Source/Core/Audio/Transport/RendererThread.cpp
-index 4f61d4db..7b22313f 100644
---- a/Source/Core/Audio/Transport/RendererThread.cpp
-+++ b/Source/Core/Audio/Transport/RendererThread.cpp
-@@ -86,7 +86,7 @@ bool RendererThread::startRendering(const URL &target, RenderFormat format,
-         if (writer != nullptr)
-         {
-             DBG(this->renderTarget.getLocalFile().getFullPathName());
--            this->startThread(9);
-+            this->startThread(Thread::Priority::highest);
-         }
- 
-         return true;
-diff --git a/Source/Core/VCS/Head.cpp b/Source/Core/VCS/Head.cpp
-index 3bbed38b..c5055090 100644
---- a/Source/Core/VCS/Head.cpp
-+++ b/Source/Core/VCS/Head.cpp
-@@ -418,7 +418,7 @@ void Head::rebuildDiffIfNeeded()
- {
-     if (this->isDiffOutdated() && !this->isThreadRunning())
-     {
--        this->startThread(5);
-+        this->startThread(Thread::Priority::high);
-     }
- }
- 
-@@ -431,7 +431,7 @@ void Head::rebuildDiffNow()
-         this->stopThread(Head::diffRebuildThreadStopTimeoutMs);
-     }
- 
--    this->startThread(9);
-+    this->startThread(Thread::Priority::high);
- }
- 
- 
-diff --git a/Source/UI/Common/AudioMonitors/SpectrogramAudioMonitorComponent.cpp b/Source/UI/Common/AudioMonitors/SpectrogramAudioMonitorComponent.cpp
-index 0130c0c8..3ac51c28 100644
---- a/Source/UI/Common/AudioMonitors/SpectrogramAudioMonitorComponent.cpp
-+++ b/Source/UI/Common/AudioMonitors/SpectrogramAudioMonitorComponent.cpp
-@@ -50,7 +50,7 @@ SpectrogramAudioMonitorComponent::SpectrogramAudioMonitorComponent(WeakReference
- 
-     if (this->audioMonitor != nullptr)
-     {
--        this->startThread(5);
-+        this->startThread(Thread::Priority::high);
-     }
- }
- 
-@@ -59,7 +59,7 @@ void SpectrogramAudioMonitorComponent::setTargetAnalyzer(WeakReference<AudioMoni
-     if (monitor != nullptr)
-     {
-         this->audioMonitor = monitor;
--        this->startThread(5);
-+        this->startThread(Thread::Priority::high);
-     }
- }
- 
-diff --git a/Source/UI/Common/AudioMonitors/WaveformAudioMonitorComponent.cpp b/Source/UI/Common/AudioMonitors/WaveformAudioMonitorComponent.cpp
-index 59a39a0a..2bf8b527 100644
---- a/Source/UI/Common/AudioMonitors/WaveformAudioMonitorComponent.cpp
-+++ b/Source/UI/Common/AudioMonitors/WaveformAudioMonitorComponent.cpp
-@@ -31,7 +31,7 @@ WaveformAudioMonitorComponent::WaveformAudioMonitorComponent(WeakReference<Audio
- 
-     if (this->audioMonitor != nullptr)
-     {
--        this->startThread(6);
-+        this->startThread(Thread::Priority::high);
-     }
- }
- 
-@@ -45,7 +45,7 @@ void WaveformAudioMonitorComponent::setTargetAnalyzer(WeakReference<AudioMonitor
-     if (targetAnalyzer != nullptr)
-     {
-         this->audioMonitor = targetAnalyzer;
--        this->startThread(6);
-+        this->startThread(Thread::Priority::high);
-     }
- }
- 
-diff --git a/Source/UI/Common/MetronomeEditor.h b/Source/UI/Common/MetronomeEditor.h
-index 79f8b004..30c20c50 100644
---- a/Source/UI/Common/MetronomeEditor.h
-+++ b/Source/UI/Common/MetronomeEditor.h
-@@ -184,7 +184,7 @@ public:
-             this->metronomePreviewThread = make<MetronomePreviewThread>(this->transport,
-                 this->metronome, this->metronomeInstrument);
- 
--            this->metronomePreviewThread->startThread(5);
-+            this->metronomePreviewThread->startThread(Thread::Priority::highest);
-             this->playButton->setPlaying(true);
-         }
-         else if (commandId == CommandIDs::TransportStop)
-diff --git a/Source/UI/Common/SpectralLogo.cpp b/Source/UI/Common/SpectralLogo.cpp
-index a5b41d9b..8e191e95 100644
---- a/Source/UI/Common/SpectralLogo.cpp
-+++ b/Source/UI/Common/SpectralLogo.cpp
-@@ -26,8 +26,8 @@ SpectralLogo::SpectralLogo() : Thread("Logo Animation")
-     {
-         this->bands.add(new SpectralLogo::Band(this));
-     }
--    
--    this->startThread(5);
++    SoundFont2Generator(const char *name, Type type) : name(name), type(type) {}
 +
-+    this->startThread(Thread::Priority::high);
- }
- 
- SpectralLogo::~SpectralLogo()
-diff --git a/Source/UI/Dialogs/KeySignatureDialog.cpp b/Source/UI/Dialogs/KeySignatureDialog.cpp
-index f433cef1..211dd08c 100644
---- a/Source/UI/Dialogs/KeySignatureDialog.cpp
-+++ b/Source/UI/Dialogs/KeySignatureDialog.cpp
-@@ -283,7 +283,7 @@ void KeySignatureDialog::handleCommandMessage(int commandId)
-         }
- 
-         this->scalePreviewThread = make<ScalePreviewThread>(this->transport, move(scaleKeys));
--        this->scalePreviewThread->startThread(5);
-+        this->scalePreviewThread->startThread(Thread::Priority::high);
- 
-         this->playButton->setPlaying(true);
-     }
-diff --git a/Source/UI/Input/SmoothZoomController.h b/Source/UI/Input/SmoothZoomController.h
-index 087794d4..94b82af3 100644
---- a/Source/UI/Input/SmoothZoomController.h
-+++ b/Source/UI/Input/SmoothZoomController.h
-@@ -30,7 +30,7 @@ public:
-         Thread("SmoothZoom"),
-         listener(parent)
+     enum
      {
--        this->startThread(9);
-+        this->startThread(Thread::Priority::highest);
-     }
- 
-     ~SmoothZoomController() override
+         startAddrsOffset,
 diff --git a/ThirdParty/JUCE b/ThirdParty/JUCE
-index ad8ce3b1..e49fb38d 160000
 --- a/ThirdParty/JUCE
 +++ b/ThirdParty/JUCE
 @@ -1 +1 @@
--Subproject commit ad8ce3b1e60d81fc10b5366d704dba045bdddf3a
-+Subproject commit e49fb38d44622435f39f486530e84f84df20c8af
+-Subproject commit 765814eab027d07171eabf2a5cd4fafd25cd2cdb
++Subproject commit 765814eab027d07171eabf2a5cd4fafd25cd2cdb-dirty
