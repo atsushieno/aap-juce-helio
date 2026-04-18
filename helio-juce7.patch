@@ -64,10 +64,10 @@ index 665e1e46..67e3a161 100644
 +    androidaudioplugin::androidaudioplugin
  )
 diff --git a/Projects/Android/app/build.gradle b/Projects/Android/app/build.gradle
-index cd1afcaf..ab4f86ad 100644
+index cd1afcaf..8b611e34 100644
 --- a/Projects/Android/app/build.gradle
 +++ b/Projects/Android/app/build.gradle
-@@ -1,104 +1,58 @@
+@@ -1,104 +1,62 @@
 -apply plugin: 'com.android.application'
 +plugins {
 +    id 'com.android.application'
@@ -110,8 +110,9 @@ index cd1afcaf..ab4f86ad 100644
          externalNativeBuild {
              cmake {
 -                arguments "-DANDROID_TOOLCHAIN=clang", "-DANDROID_PLATFORM=android-21", "-DANDROID_STL=c++_static", "-DANDROID_CPP_FEATURES=exceptions rtti", "-DANDROID_ARM_MODE=arm", "-DANDROID_ARM_NEON=TRUE", "-DCMAKE_CXX_STANDARD=14", "-DCMAKE_CXX_EXTENSIONS=OFF"
--            }
--        }
++                arguments "-DCMAKE_BUILD_TYPE=RelWithDebInfo", "-DANDROID_TOOLCHAIN=clang", "-DANDROID_PLATFORM=android-29", "-DANDROID_STL=c++_shared", "-DANDROID_CPP_FEATURES=exceptions rtti", "-DANDROID_ARM_MODE=arm", "-DANDROID_ARM_NEON=TRUE", "-DCMAKE_CXX_STANDARD=20", "-DCMAKE_CXX_EXTENSIONS=OFF"
+             }
+         }
 -    }
 -
 -    buildTypes {
@@ -146,8 +147,7 @@ index cd1afcaf..ab4f86ad 100644
 -        release_ {
 -            ndk {
 -                abiFilters "armeabi-v7a", "arm64-v8a"
-+                arguments "-DCMAKE_BUILD_TYPE=RelWithDebInfo", "-DANDROID_TOOLCHAIN=clang", "-DANDROID_PLATFORM=android-29", "-DANDROID_STL=c++_shared", "-DANDROID_CPP_FEATURES=exceptions rtti", "-DANDROID_ARM_MODE=arm", "-DANDROID_ARM_NEON=TRUE", "-DCMAKE_CXX_STANDARD=20", "-DCMAKE_CXX_EXTENSIONS=OFF"
-             }
+-            }
 -            externalNativeBuild {
 -                cmake {
 -                    arguments "-DJUCE_BUILD_CONFIGURATION=RELEASE", "-DCMAKE_CXX_FLAGS_RELEASE=-O3", "-DCMAKE_C_FLAGS_RELEASE=-O3"
@@ -167,7 +167,7 @@ index cd1afcaf..ab4f86ad 100644
 -        if (names.contains ("release_")
 -              && variant.buildType.name != "release") {
 -            setIgnore(true)
-         }
+-        }
 +        proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
      }
  
@@ -195,8 +195,12 @@ index cd1afcaf..ab4f86ad 100644
      }
  
 -ndkVersion "21.3.6528147"
-+ndkVersion libs.versions.ndk.get()
++    ndkVersion libs.versions.ndk.get()
  
++    compileOptions {
++        sourceCompatibility JavaVersion.VERSION_11
++        targetCompatibility JavaVersion.VERSION_11
++    }
  }
  
 diff --git a/Projects/Android/app/src/debug/res/values/string.xml b/Projects/Android/app/src/debug/res/values/string.xml
