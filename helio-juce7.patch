@@ -64,7 +64,7 @@ index 665e1e46..67e3a161 100644
 +    androidaudioplugin::androidaudioplugin
  )
 diff --git a/Projects/Android/app/build.gradle b/Projects/Android/app/build.gradle
-index cd1afcaf..8b611e34 100644
+index cd1afcaf..3e8bed60 100644
 --- a/Projects/Android/app/build.gradle
 +++ b/Projects/Android/app/build.gradle
 @@ -1,104 +1,62 @@
@@ -75,7 +75,7 @@ index cd1afcaf..8b611e34 100644
 +}
 +
 +kotlin {
-+    jvmToolchain(11)
++    jvmToolchain(17)
 +}
  
  android {
@@ -198,8 +198,8 @@ index cd1afcaf..8b611e34 100644
 +    ndkVersion libs.versions.ndk.get()
  
 +    compileOptions {
-+        sourceCompatibility JavaVersion.VERSION_11
-+        targetCompatibility JavaVersion.VERSION_11
++        sourceCompatibility JavaVersion.VERSION_17
++        targetCompatibility JavaVersion.VERSION_17
 +    }
  }
  
