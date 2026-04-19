@@ -3,4 +3,5 @@ dummy-aap-dir
 .stamp-helio
 dist
 .idea
+.DS_Store
 
