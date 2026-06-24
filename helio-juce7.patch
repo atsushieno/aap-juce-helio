@@ -403,3 +403,354 @@ diff --git a/ThirdParty/JUCE b/ThirdParty/JUCE
 @@ -1 +1 @@
 -Subproject commit 765814eab027d07171eabf2a5cd4fafd25cd2cdb
 +Subproject commit 765814eab027d07171eabf2a5cd4fafd25cd2cdb-dirty
+diff --git a/Source/Core/Configuration/Resources/TranslationsCollection.cpp b/Source/Core/Configuration/Resources/TranslationsCollection.cpp
+index 0c769e45..b2aba240 100644
+--- a/Source/Core/Configuration/Resources/TranslationsCollection.cpp
++++ b/Source/Core/Configuration/Resources/TranslationsCollection.cpp
+@@ -140,7 +140,7 @@ String TranslationsCollection::translate(const String &baseLiteral, int64 target
+         this->currentTranslation->pluralEquation.replace(Translations::metaSymbol,
+             String(targetNumber > 0 ? targetNumber : -targetNumber));
+ 
+-    const Result result = this->engine->execute(expressionToEvaluate);
++    const juce::Result result = this->engine->execute(expressionToEvaluate);
+     if (!result.failed())
+     {
+         const String pluralForm = this->equationResult;
+diff --git a/Source/Core/Serialization/BinarySerializer.cpp b/Source/Core/Serialization/BinarySerializer.cpp
+index e713c3d3..c7f90ab6 100644
+--- a/Source/Core/Serialization/BinarySerializer.cpp
++++ b/Source/Core/Serialization/BinarySerializer.cpp
+@@ -21,7 +21,7 @@
+ static const char *kHelioHeaderV2String = "Helio2::";
+ static const uint64 kHelioHeaderV2 = ByteOrder::littleEndianInt64(kHelioHeaderV2String);
+ 
+-Result BinarySerializer::saveToFile(File file, const SerializedData &tree) const
++juce::Result BinarySerializer::saveToFile(File file, const SerializedData &tree) const
+ {
+     FileOutputStream fileStream(file);
+     if (fileStream.openedOk())
+@@ -30,10 +30,10 @@ Result BinarySerializer::saveToFile(File file, const SerializedData &tree) const
+         fileStream.truncate();
+         fileStream.writeInt64(kHelioHeaderV2);
+         tree.writeToStream(fileStream);
+-        return Result::ok();
++        return juce::Result::ok();
+     }
+ 
+-    return Result::fail("Failed to save");
++    return juce::Result::fail("Failed to save");
+ }
+ 
+ SerializedData BinarySerializer::loadFromFile(const File &file) const
+@@ -59,13 +59,13 @@ SerializedData BinarySerializer::loadFromFile(const File &file) const
+     return {};
+ }
+ 
+-Result BinarySerializer::saveToString(String &string, const SerializedData &tree) const
++juce::Result BinarySerializer::saveToString(String &string, const SerializedData &tree) const
+ {
+     MemoryOutputStream memStream;
+     memStream.writeInt64(kHelioHeaderV2);
+     tree.writeToStream(memStream);
+     string = memStream.toUTF8();
+-    return Result::ok();
++    return juce::Result::ok();
+ }
+ 
+ SerializedData BinarySerializer::loadFromString(const String &string) const
+diff --git a/Source/Core/Serialization/BinarySerializer.h b/Source/Core/Serialization/BinarySerializer.h
+index 0a12c340..427ae75f 100644
+--- a/Source/Core/Serialization/BinarySerializer.h
++++ b/Source/Core/Serialization/BinarySerializer.h
+@@ -23,10 +23,10 @@ class BinarySerializer final : public Serializer
+ {
+ public:
+ 
+-    Result saveToFile(File file, const SerializedData &tree) const override;
++    juce::Result saveToFile(File file, const SerializedData &tree) const override;
+     SerializedData loadFromFile(const File &file) const override;
+ 
+-    Result saveToString(String &string, const SerializedData &tree) const override;
++    juce::Result saveToString(String &string, const SerializedData &tree) const override;
+     SerializedData loadFromString(const String &string) const override;
+ 
+     bool supportsFileWithExtension(const String &extension) const override;
+diff --git a/Source/Core/Serialization/JsonSerializer.cpp b/Source/Core/Serialization/JsonSerializer.cpp
+index efcdc18b..5e059e50 100644
+--- a/Source/Core/Serialization/JsonSerializer.cpp
++++ b/Source/Core/Serialization/JsonSerializer.cpp
+@@ -28,13 +28,13 @@
+ 
+ struct JsonParser final
+ {
+-    static Result parseObjectOrArray(String::CharPointerType t, SerializedData &result)
++    static juce::Result parseObjectOrArray(String::CharPointerType t, SerializedData &result)
+     {
+         skipCommentsAndWhitespaces(t);
+ 
+         switch (t.getAndAdvance())
+         {
+-        case 0:      result = SerializedData(); return Result::ok();
++        case 0:      result = SerializedData(); return juce::Result::ok();
+         case '{':    return parseObject(t, result);
+         case '[':    return parseArray(t, result, result.getType());
+         }
+@@ -42,7 +42,7 @@ struct JsonParser final
+         return createFail("Expected '{' or '['", &t);
+     }
+ 
+-    static Result parseStringProperty(const juce_wchar quoteChar, String::CharPointerType &t, const Identifier &propertyName, SerializedData &tree)
++    static juce::Result parseStringProperty(const juce_wchar quoteChar, String::CharPointerType &t, const Identifier &propertyName, SerializedData &tree)
+     {
+         String property;
+         const auto r = parseString(quoteChar, t, property);
+@@ -54,7 +54,7 @@ struct JsonParser final
+         return r;
+     }
+ 
+-    static Result parseString(const juce_wchar quoteChar, String::CharPointerType &t, String &result)
++    static juce::Result parseString(const juce_wchar quoteChar, String::CharPointerType &t, String &result)
+     {
+         static MemoryOutputStream buffer(256);
+         buffer.reset();
+@@ -107,7 +107,7 @@ struct JsonParser final
+         }
+ 
+         result = buffer.toUTF8();
+-        return Result::ok();
++        return juce::Result::ok();
+     }
+ 
+     static void findNextNewline(String::CharPointerType &t)
+@@ -151,7 +151,7 @@ struct JsonParser final
+         }
+     }
+ 
+-    static Result parseAny(String::CharPointerType &t, SerializedData &result, const Identifier &nodeOrProperty)
++    static juce::Result parseAny(String::CharPointerType &t, SerializedData &result, const Identifier &nodeOrProperty)
+     {
+         skipCommentsAndWhitespaces(t);
+         auto t2 = t;
+@@ -195,7 +195,7 @@ struct JsonParser final
+             {
+                 t = t2;
+                 result.setProperty(nodeOrProperty, true);
+-                return Result::ok();
++                return juce::Result::ok();
+             }
+             break;
+ 
+@@ -205,7 +205,7 @@ struct JsonParser final
+             {
+                 t = t2;
+                 result.setProperty(nodeOrProperty, false);
+-                return Result::ok();
++                return juce::Result::ok();
+             }
+             break;
+ 
+@@ -214,7 +214,7 @@ struct JsonParser final
+             {
+                 t = t2;
+                 // no need to set any property in this case?
+-                return Result::ok();
++                return juce::Result::ok();
+             }
+             break;
+ 
+@@ -226,16 +226,16 @@ struct JsonParser final
+     }
+ 
+ private:
+-    static Result createFail(const char *const message, const String::CharPointerType *location = nullptr)
++    static juce::Result createFail(const char *const message, const String::CharPointerType *location = nullptr)
+     {
+         String m(message);
+         if (location != nullptr)
+             m << ": \"" << String(*location, 20) << '"';
+ 
+-        return Result::fail(m);
++        return juce::Result::fail(m);
+     }
+ 
+-    static Result parseNumberProperty(String::CharPointerType &t, const Identifier &propertyName, SerializedData &result, const bool isNegative)
++    static juce::Result parseNumberProperty(String::CharPointerType &t, const Identifier &propertyName, SerializedData &result, const bool isNegative)
+     {
+         auto oldT = t;
+ 
+@@ -259,7 +259,7 @@ private:
+                 t = oldT;
+                 auto asDouble = CharacterFunctions::readDoubleValue(t);
+                 result.setProperty(propertyName, isNegative ? -asDouble : asDouble);
+-                return Result::ok();
++                return juce::Result::ok();
+             }
+ 
+             if (CharacterFunctions::isWhitespace(c)
+@@ -279,10 +279,10 @@ private:
+         else
+             result.setProperty(propertyName, (int)correctedValue);
+ 
+-        return Result::ok();
++        return juce::Result::ok();
+     }
+ 
+-    static Result parseObject(String::CharPointerType &t, SerializedData &result)
++    static juce::Result parseObject(String::CharPointerType &t, SerializedData &result)
+     {
+         for (;;)
+         {
+@@ -324,10 +324,10 @@ private:
+             return createFail("Expected object member declaration, but found", &oldT);
+         }
+ 
+-        return Result::ok();
++        return juce::Result::ok();
+     }
+ 
+-    static Result parseArray(String::CharPointerType &t, SerializedData &result, const Identifier &nodeName)
++    static juce::Result parseArray(String::CharPointerType &t, SerializedData &result, const Identifier &nodeName)
+     {
+         for (;;)
+         {
+@@ -353,7 +353,7 @@ private:
+             return createFail("Expected object array item, but found", &oldT);
+         }
+ 
+-        return Result::ok();
++        return juce::Result::ok();
+     }
+ };
+ 
+@@ -630,7 +630,7 @@ void JsonSerializer::setHeaderComments(StringArray comments) noexcept
+     this->headerComments = comments;
+ }
+ 
+-Result JsonSerializer::saveToFile(File file, const SerializedData &tree) const
++juce::Result JsonSerializer::saveToFile(File file, const SerializedData &tree) const
+ {
+     FileOutputStream fileStream(file);
+     if (fileStream.openedOk())
+@@ -639,10 +639,10 @@ Result JsonSerializer::saveToFile(File file, const SerializedData &tree) const
+         fileStream.truncate();
+ 
+         JsonFormatter::write(fileStream, tree, this->headerComments, 0, this->allOnOneLine, 6);
+-        return Result::ok();
++        return juce::Result::ok();
+     }
+ 
+-    return Result::fail("Failed to save");
++    return juce::Result::fail("Failed to save");
+ }
+ 
+ SerializedData JsonSerializer::loadFromFile(const File &file) const
+@@ -658,12 +658,12 @@ SerializedData JsonSerializer::loadFromFile(const File &file) const
+     return {};
+ }
+ 
+-Result JsonSerializer::saveToString(String &string, const SerializedData &tree) const
++juce::Result JsonSerializer::saveToString(String &string, const SerializedData &tree) const
+ {
+     MemoryOutputStream mo(1024);
+     JsonFormatter::write(mo, tree, this->headerComments, 0, this->allOnOneLine, 6);
+     string = mo.toUTF8();
+-    return Result::ok();
++    return juce::Result::ok();
+ }
+ 
+ SerializedData JsonSerializer::loadFromString(const String &string) const
+diff --git a/Source/Core/Serialization/JsonSerializer.h b/Source/Core/Serialization/JsonSerializer.h
+index 5505d6ac..0099d677 100644
+--- a/Source/Core/Serialization/JsonSerializer.h
++++ b/Source/Core/Serialization/JsonSerializer.h
+@@ -27,10 +27,10 @@ public:
+ 
+     void setHeaderComments(StringArray comments) noexcept;
+ 
+-    Result saveToFile(File file, const SerializedData &tree) const override;
++    juce::Result saveToFile(File file, const SerializedData &tree) const override;
+     SerializedData loadFromFile(const File &file) const override;
+ 
+-    Result saveToString(String &string, const SerializedData &tree) const override;
++    juce::Result saveToString(String &string, const SerializedData &tree) const override;
+     SerializedData loadFromString(const String &string) const override;
+ 
+     bool supportsFileWithExtension(const String &extension) const override;
+diff --git a/Source/Core/Serialization/Serializer.h b/Source/Core/Serialization/Serializer.h
+index f800ebb4..19ab5b6b 100644
+--- a/Source/Core/Serialization/Serializer.h
++++ b/Source/Core/Serialization/Serializer.h
+@@ -26,10 +26,10 @@ public:
+ 
+     virtual ~Serializer() = default;
+ 
+-    virtual Result saveToFile(File file, const SerializedData &tree) const = 0;
++    virtual juce::Result saveToFile(File file, const SerializedData &tree) const = 0;
+     virtual SerializedData loadFromFile(const File &file) const = 0;
+ 
+-    virtual Result saveToString(String &string, const SerializedData &tree) const = 0;
++    virtual juce::Result saveToString(String &string, const SerializedData &tree) const = 0;
+     virtual SerializedData loadFromString(const String &string) const = 0;
+ 
+     virtual bool supportsFileWithExtension(const String &extension) const = 0;
+diff --git a/Source/Core/Serialization/XmlSerializer.cpp b/Source/Core/Serialization/XmlSerializer.cpp
+index 0fad6ad0..59f7843f 100644
+--- a/Source/Core/Serialization/XmlSerializer.cpp
++++ b/Source/Core/Serialization/XmlSerializer.cpp
+@@ -29,16 +29,16 @@ static XmlElement::TextFormat getXmlFormat()
+     return format;
+ }
+ 
+-Result XmlSerializer::saveToFile(File file, const SerializedData &tree) const
++juce::Result XmlSerializer::saveToFile(File file, const SerializedData &tree) const
+ {
+     UniquePointer<XmlElement> xml(tree.writeToXml());
+     if (xml != nullptr)
+     {
+         const auto saved = xml->writeTo(file, getXmlFormat());
+-        return saved ? Result::ok() : Result::fail({});
++        return saved ? juce::Result::ok() : juce::Result::fail({});
+     }
+ 
+-    return Result::fail({});
++    return juce::Result::fail({});
+ }
+ 
+ SerializedData XmlSerializer::loadFromFile(const File &file) const
+@@ -53,16 +53,16 @@ SerializedData XmlSerializer::loadFromFile(const File &file) const
+     return {};
+ }
+ 
+-Result XmlSerializer::saveToString(String &string, const SerializedData &tree) const
++juce::Result XmlSerializer::saveToString(String &string, const SerializedData &tree) const
+ {
+     UniquePointer<XmlElement> xml(tree.writeToXml());
+     if (xml != nullptr)
+     {
+         string = xml->toString(getXmlFormat());
+-        return Result::ok();
++        return juce::Result::ok();
+     }
+ 
+-    return Result::fail({});
++    return juce::Result::fail({});
+ }
+ 
+ SerializedData XmlSerializer::loadFromString(const String &string) const
+diff --git a/Source/Core/Serialization/XmlSerializer.h b/Source/Core/Serialization/XmlSerializer.h
+index 8d49c745..e1d1be67 100644
+--- a/Source/Core/Serialization/XmlSerializer.h
++++ b/Source/Core/Serialization/XmlSerializer.h
+@@ -23,10 +23,10 @@ class XmlSerializer final : public Serializer
+ {
+ public:
+ 
+-    Result saveToFile(File file, const SerializedData &tree) const override;
++    juce::Result saveToFile(File file, const SerializedData &tree) const override;
+     SerializedData loadFromFile(const File &file) const override;
+ 
+-    Result saveToString(String &string, const SerializedData &tree) const override;
++    juce::Result saveToString(String &string, const SerializedData &tree) const override;
+     SerializedData loadFromString(const String &string) const override;
+ 
+     bool supportsFileWithExtension(const String &extension) const override;

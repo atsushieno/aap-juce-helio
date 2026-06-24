@@ -37,6 +37,7 @@ $(JUCE_DIR)/.stamp-juce:
 		patch -i $(AAP_JUCE_DIR)/JUCE-support-Android-CMake-hosting.patch -p1 -l ; \
 		patch -i $(AAP_JUCE_DIR)/juce-patches/7.0.5/thread-via-dalvik.patch -p1 -l ; \
 		patch -i $(AAP_JUCE_DIR)/JUCE-76589ee.patch -p1 -l ; \
+		patch -i $(AAP_JUCE_DIR)/juce-patches/7.0.2/juce-android-opengl-local-bounds.patch -p1 -l ; \
 	touch .stamp-juce
 
 dist:
